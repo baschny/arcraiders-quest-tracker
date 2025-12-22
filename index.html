@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARC Raiders Quest Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        #app {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #4fc3f7;
+            font-size: 2.5em;
+            text-shadow: 0 0 10px rgba(79, 195, 247, 0.5);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #2c2c2c;
+            color: #e0e0e0;
+            border: 1px solid #444;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: #3c3c3c;
+            border-color: #666;
+        }
+
+        .quest-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 60px;
+        }
+
+        .quest-tier {
+            position: relative;
+        }
+
+        .quest-tier-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: center;
+            position: relative;
+        }
+
+        .quest-node {
+            position: relative;
+            width: 250px;
+            padding: 15px;
+            background: #2c2c2c;
+            border: 2px solid #444;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .quest-node:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+
+        .quest-node.completed {
+            opacity: 0.5;
+            background: #1a1a1a;
+            border-color: #2c2c2c;
+        }
+
+        .quest-node.available {
+            border-color: #ffd700;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .quest-node.available:after {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            border-radius: 8px;
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            z-index: -1;
+            opacity: 0.3;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.6; }
+        }
+
+        .quest-id {
+            font-size: 11px;
+            color: #888;
+            margin-bottom: 8px;
+            font-family: monospace;
+        }
+
+        .quest-name {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #e0e0e0;
+        }
+
+        .quest-wiki-link {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 18px;
+            color: #888;
+            text-decoration: none;
+            transition: color 0.3s;
+            z-index: 10;
+        }
+
+        .quest-wiki-link:hover {
+            color: #4fc3f7;
+        }
+
+        .quest-trader {
+            font-size: 13px;
+            padding: 4px 8px;
+            border-radius: 3px;
+            display: inline-block;
+        }
+
+        .trader-Celeste { background: #7b1fa2; color: #fff; }
+        .trader-Shani { background: #f57c00; color: #fff; }
+        .trader-Lance { background: #388e3c; color: #fff; }
+        .trader-TianWen { background: #c62828; color: #fff; }
+        .trader-Apollo { background: #0277bd; color: #fff; }
+        .trader-Unknown { background: #616161; color: #fff; }
+
+        svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .connection-line {
+            stroke: #444;
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .connection-line.completed {
+            stroke: #2c2c2c;
+            stroke-dasharray: 4 4;
+        }
+
+        .stats {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            background: #2c2c2c;
+            border-radius: 8px;
+        }
+
+        .stats-content {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #4fc3f7;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>ARC Raiders Quest Tracker</h1>
+        <div class="controls">
+            <button onclick="resetProgress()">Reset All Progress</button>
+            <button onclick="exportProgress()">Export Progress</button>
+            <button onclick="importProgress()">Import Progress</button>
+        </div>
+        <div id="quest-container"></div>
+        <div class="stats">
+            <div class="stats-content">
+                <div class="stat-item">
+                    <div class="stat-value" id="completed-count">0</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="available-count">0</div>
+                    <div class="stat-label">Available</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="total-count">0</div>
+                    <div class="stat-label">Total Quests</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const QUESTS = [{"id":"ss5","name":"A Bad Feeling","trader":"Celeste","previousQuestIds":["ss4"],"nextQuestIds":["ss5a","ss7","ss8"]},{"id":"ss10x","name":"A Balanced Harvest","trader":"Celeste","previousQuestIds":["ss10s"],"nextQuestIds":["ss10x2"]},{"id":"ss10","name":"A Better Use","trader":"Tian Wen","previousQuestIds":["ss7"],"nextQuestIds":["ss10a"]},{"id":"ss11","name":"A First Foothold","trader":"Shani","previousQuestIds":[],"nextQuestIds":["ss11a"]},{"id":"ss10k","name":"A Lay of the Land","trader":"Shani","previousQuestIds":["ss10g"],"nextQuestIds":["ss10s"]},{"id":"ss10x19","name":"A New Type of Plant","trader":"Lance","previousQuestIds":["ss10x18"],"nextQuestIds":["ss10x20"]},{"id":"ss10g","name":"A Reveal in Ruins","trader":"Lance","previousQuestIds":["ss10f"],"nextQuestIds":["ss10k"]},{"id":"ss10r","name":"A Symbol of Unification","trader":"Celeste","previousQuestIds":["ss10q"],"nextQuestIds":["ss10t","ss10u","ss10v"]},{"id":"a_toxic_trail","name":"A Toxic Trail","trader":"Shani","previousQuestIds":["ss10x20"],"nextQuestIds":["the_stench_of_corruption"]},{"id":"ss10x8","name":"A Warm Place to Rest","trader":"Apollo","previousQuestIds":["ss10x7"],"nextQuestIds":["ss10x9"]},{"id":"ss10y","name":"After Rain Comes","trader":"Celeste","previousQuestIds":["ss10s"],"nextQuestIds":["ss10x4"]},{"id":"ss10x20","name":"Armored Transports","trader":"Shani","previousQuestIds":["ss10x19","ss11bx"],"nextQuestIds":["a_toxic_trail","paving_the_way","12_in_my_image","the_clean_dream"]},{"id":"ss10w","name":"Back on Top","trader":"Tian Wen","previousQuestIds":["ss10t"],"nextQuestIds":["ss10z"]},{"id":"ss10x12","name":"Bees!","trader":"Celeste","previousQuestIds":["ss10x11"],"nextQuestIds":["ss10x13"]},{"id":"ss10h","name":"Broken Monument","trader":"Tian Wen","previousQuestIds":["ss10e"],"nextQuestIds":["ss10i","ss10j"]},{"id":"ss10x18","name":"Building a Library","trader":"Apollo","previousQuestIds":["ss10x16"],"nextQuestIds":["ss10x19"]},{"id":"ss10t","name":"Celeste's Journals","trader":"Celeste","previousQuestIds":["ss10r"],"nextQuestIds":["ss10w"]},{"id":"ss2","name":"Clearer Skies","trader":"Shani","previousQuestIds":["ss1"],"nextQuestIds":["ss4"]},{"id":"12_cold_storage","name":"Cold Storage","trader":"Celeste","previousQuestIds":["12_in_my_image"],"nextQuestIds":["12_snap_and_salvage"]},{"id":"ss11b2","name":"Communication Hideout","trader":"Shani","previousQuestIds":["ss11b"],"nextQuestIds":["ss10x5"]},{"id":"deciphering_the_data","name":"Deciphering the Data","trader":"Shani","previousQuestIds":["a_toxic_trail","paving_the_way"],"nextQuestIds":["groundbreaking"]},{"id":"ss10x16","name":"Digging Up Dirt","trader":"Celeste","previousQuestIds":["ss10x15"],"nextQuestIds":["ss10x17","ss10x18"]},{"id":"ss10c","name":"Doctor's Orders","trader":"Celeste","previousQuestIds":["ss10a"],"nextQuestIds":["ss10f"]},{"id":"ss10b","name":"Dormant Barons","trader":"Shani","previousQuestIds":["ss10a"],"nextQuestIds":["ss10d","ss10e"]},{"id":"ss6","name":"Down To Earth","trader":"Shani","previousQuestIds":["ss5a"],"nextQuestIds":["ss9"]},{"id":"ss10p","name":"Echoes of Victory Ridge","trader":"Celeste","previousQuestIds":["ss10o"],"nextQuestIds":["ss10q"]},{"id":"ss10x13","name":"Espresso","trader":"Apollo","previousQuestIds":["ss10x12"],"nextQuestIds":["ss10x14"]},{"id":"ss10s","name":"Eyes in the Sky","trader":"Shani","previousQuestIds":["ss10k"],"nextQuestIds":["ss10w","ss10x","ss10y"]},{"id":"ss10m","name":"Eyes on the Prize","trader":"Tian Wen","previousQuestIds":["ss10l"],"nextQuestIds":["ss10n"]},{"id":"ss10x11","name":"Flickering Threat","trader":"Celeste","previousQuestIds":["ss10x10"],"nextQuestIds":["ss10x12"]},{"id":"ss10a","name":"Greasing Her Palms","trader":"Celeste","previousQuestIds":["ss10"],"nextQuestIds":["ss10b","ss10c"]},{"id":"groundbreaking","name":"Groundbreaking","trader":"Apollo","previousQuestIds":["deciphering_the_data"],"nextQuestIds":[]},{"id":"ss5a","name":"Hatch Repairs","trader":"Shani","previousQuestIds":["ss5"],"nextQuestIds":["ss6"]},{"id":"12_in_my_image","name":"In My Image","trader":"Lance","previousQuestIds":["12_snap_and_salvage","ss10x20"],"nextQuestIds":["12_cold_storage"]},{"id":"ss10n","name":"Industrial Espionage","trader":"Tian Wen","previousQuestIds":["ss10m"],"nextQuestIds":["ss10q"]},{"id":"ss10x5","name":"Into the Fray","trader":"Shani","previousQuestIds":["ss10x4","ss11b2"],"nextQuestIds":[]},{"id":"ss10o","name":"Keeping the Memory","trader":"Celeste","previousQuestIds":["ss10j"],"nextQuestIds":["ss10p"]},{"id":"ss10x14","name":"Life of a Pharmacist","trader":"Lance","previousQuestIds":["ss10x13"],"nextQuestIds":["ss10x15"]},{"id":"ss11b","name":"Lost in Transmission","trader":"Shani","previousQuestIds":["ss10z"],"nextQuestIds":["ss11b2"]},{"id":"ss10i","name":"Marked for Death","trader":"Tian Wen","previousQuestIds":["ss10h"],"nextQuestIds":["ss10l"]},{"id":"ss10l","name":"Market Correction","trader":"Tian Wen","previousQuestIds":["ss10i"],"nextQuestIds":["ss10m"]},{"id":"ss10f","name":"Medical Merchandise","trader":"Lance","previousQuestIds":["ss10c"],"nextQuestIds":["ss10g"]},{"id":"ss10d","name":"Mixed Signals","trader":"Tian Wen","previousQuestIds":["ss10b"],"nextQuestIds":[]},{"id":"ss4","name":"Off The Radar","trader":"Shani","previousQuestIds":["ss2","ss3"],"nextQuestIds":["ss5"]},{"id":"ss10z","name":"Our Presence Up There","trader":"Shani","previousQuestIds":["ss10w"],"nextQuestIds":["ss11b"]},{"id":"ss10v","name":"Out of the Shadows","trader":"Shani","previousQuestIds":["ss10r"],"nextQuestIds":[]},{"id":"paving_the_way","name":"Paving the Way","trader":"Apollo","previousQuestIds":["ss10x20"],"nextQuestIds":["deciphering_the_data"]},{"id":"ss1","name":"Picking Up The Pieces","trader":"Shani","previousQuestIds":[],"nextQuestIds":["ss2","ss3"]},{"id":"ss10x10","name":"Power Out","trader":"Celeste","previousQuestIds":["ss10x9"],"nextQuestIds":["ss10x11"]},{"id":"ss10x9","name":"Prescriptions of the Past","trader":"Lance","previousQuestIds":["ss10x8"],"nextQuestIds":["ss10x10"]},{"id":"ss11a","name":"Reduced to Rubble","trader":"Shani","previousQuestIds":["ss11"],"nextQuestIds":["ss11bx"]},{"id":"ss8","name":"Safe Passage","trader":"Apollo","previousQuestIds":["ss5"],"nextQuestIds":["ss8a"]},{"id":"12_snap_and_salvage","name":"Snap and Salvage","trader":"Tian Wen","previousQuestIds":["12_cold_storage"],"nextQuestIds":["12_in_my_image"]},{"id":"ss10x6","name":"Source of the Contamination","trader":"Celeste","previousQuestIds":["ss10x4"],"nextQuestIds":["ss10x7"]},{"id":"ss8b","name":"Sparks Fly","trader":"Apollo","previousQuestIds":["ss8a"],"nextQuestIds":[]},{"id":"ss10j","name":"Straight Record","trader":"Celeste","previousQuestIds":["ss10h"],"nextQuestIds":["ss10o"]},{"id":"ss10x7","name":"Switching the Supply","trader":"Celeste","previousQuestIds":["ss10x6"],"nextQuestIds":["ss10x8"]},{"id":"the_clean_dream","name":"The Clean Dream","trader":"Apollo","previousQuestIds":["ss10x20"],"nextQuestIds":[]},{"id":"ss10u","name":"The Major's Footlocker","trader":"Tian Wen","previousQuestIds":["ss10r"],"nextQuestIds":[]},{"id":"ss7","name":"The Right Tool","trader":"Tian Wen","previousQuestIds":["ss5"],"nextQuestIds":["ss10"]},{"id":"ss10x3","name":"The Root of the Matter","trader":"Celeste","previousQuestIds":["ss10x2"],"nextQuestIds":["ss10x4"]},{"id":"the_stench_of_corruption","name":"The Stench of Corruption","trader":"Shani","previousQuestIds":["a_toxic_trail"],"nextQuestIds":[]},{"id":"ss9","name":"The Trifecta","trader":"Shani","previousQuestIds":["ss6"],"nextQuestIds":[]},{"id":"ss3","name":"Trash Into Treasure","trader":"Shani","previousQuestIds":["ss1"],"nextQuestIds":["ss4"]},{"id":"ss10x15","name":"Tribute to Toledo","trader":"Celeste","previousQuestIds":["ss10x14"],"nextQuestIds":["ss10x16"]},{"id":"ss10x17","name":"Turnabout","trader":"Celeste","previousQuestIds":["ss10x16"],"nextQuestIds":[]},{"id":"ss10q","name":"Unexpected Initiative","trader":"Tian Wen","previousQuestIds":["ss10p","ss10n"],"nextQuestIds":["ss10r"]},{"id":"ss10x2","name":"Untended Garden","trader":"Celeste","previousQuestIds":["ss10x"],"nextQuestIds":["ss10x3"]},{"id":"ss10x4","name":"Water Troubles","trader":"Celeste","previousQuestIds":["ss10x3","ss10y"],"nextQuestIds":["ss10x5","ss10x6"]},{"id":"ss8a","name":"What Goes Around","trader":"Apollo","previousQuestIds":["ss8"],"nextQuestIds":["ss8b"]},{"id":"ss10e","name":"What We Left Behind","trader":"Tian Wen","previousQuestIds":["ss10b"],"nextQuestIds":["ss10h"]},{"id":"ss11bx","name":"With a Trace","trader":"Shani","previousQuestIds":["ss11a"],"nextQuestIds":[]}];
+
+        let completedQuests = new Set();
+        let questMap = new Map();
+
+        // Initialize quest map
+        QUESTS.forEach(q => questMap.set(q.id, q));
+
+        // Load progress from localStorage
+        function loadProgress() {
+            const saved = localStorage.getItem('arcraiders-quest-progress');
+            if (saved) {
+                completedQuests = new Set(JSON.parse(saved));
+            }
+        }
+
+        // Save progress to localStorage
+        function saveProgress() {
+            localStorage.setItem('arcraiders-quest-progress', JSON.stringify([...completedQuests]));
+        }
+
+        // Check if quest is available
+        function isQuestAvailable(quest) {
+            if (completedQuests.has(quest.id)) return false;
+            if (quest.previousQuestIds.length === 0) return true;
+            return quest.previousQuestIds.every(id => completedQuests.has(id));
+        }
+
+        // Get all prerequisite quests that need to be completed before this quest
+        function getPrerequisiteQuests(questId) {
+            const prerequisites = [];
+            const toCheck = [questId];
+            const visited = new Set();
+            
+            while (toCheck.length > 0) {
+                const current = toCheck.shift();
+                if (visited.has(current)) continue;
+                visited.add(current);
+                
+                prerequisites.push(current);
+                
+                // Find all prerequisite quests for the current quest
+                const quest = questMap.get(current);
+                if (quest && quest.previousQuestIds) {
+                    quest.previousQuestIds.forEach(prevId => {
+                        if (!completedQuests.has(prevId)) {
+                            toCheck.push(prevId);
+                        }
+                    });
+                }
+            }
+            
+            return prerequisites;
+        }
+
+        // Toggle quest completion
+        function toggleQuest(questId) {
+            const quest = questMap.get(questId);
+            
+            if (completedQuests.has(questId)) {
+                // Uncompleting - check for dependent quests
+                const dependents = QUESTS.filter(q => 
+                    q.previousQuestIds.includes(questId) && completedQuests.has(q.id)
+                );
+                
+                if (dependents.length > 1) {
+                    if (!confirm(`Unmarking "${quest.name}" will also unmark ${dependents.length} dependent quests. Continue?`)) {
+                        return;
+                    }
+                }
+                
+                // Unmark this quest and all dependents
+                completedQuests.delete(questId);
+                dependents.forEach(d => {
+                    unmarkQuestAndDependents(d.id);
+                });
+            } else {
+                // Mark as completed - also mark all prerequisite quests
+                const prerequisites = getPrerequisiteQuests(questId);
+                
+                if (prerequisites.length > 1) {
+                    if (!confirm(`Marking "${quest.name}" as complete will also mark ${prerequisites.length - 1} prerequisite quest${prerequisites.length - 1 > 1 ? 's' : ''} as complete. Continue?`)) {
+                        return;
+                    }
+                }
+                
+                prerequisites.forEach(qid => completedQuests.add(qid));
+            }
+            
+            saveProgress();
+            render();
+        }
+
+        function unmarkQuestAndDependents(questId) {
+            completedQuests.delete(questId);
+            const dependents = QUESTS.filter(q => 
+                q.previousQuestIds.includes(questId) && completedQuests.has(q.id)
+            );
+            dependents.forEach(d => unmarkQuestAndDependents(d.id));
+        }
+
+        // Calculate quest tiers (depth in the tree)
+        function calculateTiers() {
+            const tiers = new Map();
+            const visited = new Set();
+            
+            function visit(questId, tier) {
+                if (visited.has(questId)) return;
+                visited.add(questId);
+                
+                const currentTier = tiers.get(questId) || 0;
+                tiers.set(questId, Math.max(currentTier, tier));
+                
+                const quest = questMap.get(questId);
+                if (quest) {
+                    quest.nextQuestIds.forEach(nextId => {
+                        visit(nextId, tier + 1);
+                    });
+                }
+            }
+            
+            // Start from quests with no prerequisites
+            QUESTS.filter(q => q.previousQuestIds.length === 0).forEach(q => {
+                visit(q.id, 0);
+            });
+            
+            return tiers;
+        }
+
+        // Render the quest tree
+        function render() {
+            const tiers = calculateTiers();
+            const maxTier = Math.max(...tiers.values());
+            
+            // Group quests by tier
+            const tierGroups = new Map();
+            for (let i = 0; i <= maxTier; i++) {
+                tierGroups.set(i, []);
+            }
+            
+            QUESTS.forEach(quest => {
+                const tier = tiers.get(quest.id) || 0;
+                tierGroups.get(tier).push(quest);
+            });
+            
+            // Render
+            const container = document.getElementById('quest-container');
+            container.innerHTML = '';
+            
+            const gridDiv = document.createElement('div');
+            gridDiv.className = 'quest-grid';
+            
+            for (let tier = 0; tier <= maxTier; tier++) {
+                const quests = tierGroups.get(tier);
+                if (quests.length === 0) continue;
+                
+                const tierDiv = document.createElement('div');
+                tierDiv.className = 'quest-tier';
+                
+                const tierContent = document.createElement('div');
+                tierContent.className = 'quest-tier-content';
+                
+                quests.forEach(quest => {
+                    const node = document.createElement('div');
+                    node.className = 'quest-node';
+                    
+                    if (completedQuests.has(quest.id)) {
+                        node.classList.add('completed');
+                    } else if (isQuestAvailable(quest)) {
+                        node.classList.add('available');
+                    }
+                    
+                    const traderClass = quest.trader.replace(/\s+/g, '');
+                    // Convert to Camel_Case: capitalize first letter of each word, join with underscore
+                    const wikiLink = quest.name.split(' ').map(word => 
+                        word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                    ).join('_');
+                    
+                    node.innerHTML = `
+                        <a href="https://arcraiders.wiki/wiki/${wikiLink}" target="_blank" class="quest-wiki-link" title="View on wiki" onclick="event.stopPropagation();">🔗</a>
+                        <div class="quest-id">${quest.id}</div>
+                        <div class="quest-name">${quest.name}</div>
+                        <div class="quest-trader trader-${traderClass}">${quest.trader}</div>
+                    `;
+                    
+                    node.onclick = () => toggleQuest(quest.id);
+                    tierContent.appendChild(node);
+                });
+                
+                tierDiv.appendChild(tierContent);
+                gridDiv.appendChild(tierDiv);
+            }
+            
+            container.appendChild(gridDiv);
+            
+            // Update stats
+            const available = QUESTS.filter(q => isQuestAvailable(q)).length;
+            document.getElementById('completed-count').textContent = completedQuests.size;
+            document.getElementById('available-count').textContent = available;
+            document.getElementById('total-count').textContent = QUESTS.length;
+        }
+
+        // Controls
+        function resetProgress() {
+            if (confirm('Reset all quest progress? This cannot be undone.')) {
+                completedQuests.clear();
+                saveProgress();
+                render();
+            }
+        }
+
+        function exportProgress() {
+            const data = JSON.stringify([...completedQuests]);
+            const blob = new Blob([data], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'arcraiders-quest-progress.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importProgress() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'application/json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const data = JSON.parse(event.target.result);
+                        completedQuests = new Set(data);
+                        saveProgress();
+                        render();
+                        alert('Progress imported successfully!');
+                    } catch (err) {
+                        alert('Error importing progress: ' + err.message);
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        // Initialize
+        loadProgress();
+        render();
+    </script>
+</body>
+</html>
