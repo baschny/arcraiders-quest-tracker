@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ARC Raiders Quest Tracker</title>
-    <script src="https://unpkg.com/cytoscape@3.28.1/dist/cytoscape.min.js"></script>
-    <script src="https://unpkg.com/dagre@0.8.5/dist/dagre.min.js"></script>
-    <script src="https://unpkg.com/cytoscape-dagre@2.5.0/cytoscape-dagre.js"></script>
+    
+    <!-- React Flow CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reactflow@11.10.4/dist/style.css">
+    
     <style>
         * {
             margin: 0;
@@ -18,132 +19,300 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #1a1a1a;
             color: #e0e0e0;
-            padding: 20px;
-            line-height: 1.6;
         }
 
-        #app {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        h1 {
-            text-align: center;
-            margin-bottom: 30px;
-            color: #4fc3f7;
-            font-size: 2.5em;
-            text-shadow: 0 0 10px rgba(79, 195, 247, 0.5);
-        }
-
-        .controls {
+        #root {
+            width: 100vw;
+            height: 100vh;
             display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 10px;
+            flex-direction: column;
         }
 
-        .control-group {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        button {
-            padding: 10px 20px;
-            background: #2c2c2c;
-            color: #e0e0e0;
-            border: 1px solid #444;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.3s;
-        }
-
-        button:hover {
-            background: #3c3c3c;
-            border-color: #666;
-        }
-
-        #quest-container {
-            width: 100%;
-            height: 800px;
+        .react-flow {
             background: #1a1a1a;
-            border: 1px solid #444;
-            border-radius: 8px;
-            position: relative;
         }
 
-        #zoom-control {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            background: #2c2c2c;
-            border: 1px solid #444;
+        /* Custom Quest Node Styles */
+        .quest-node {
+            padding: 16px;
             border-radius: 8px;
-            padding: 10px 15px;
+            background: #2c2c2c;
+            border: 2px solid #444;
+            min-width: 280px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        /* Map Node Styles */
+        .map-node {
+            border-radius: 12px;
+            background: linear-gradient(135deg, #263238, #37474f);
+            border: 2px solid transparent;
+            min-width: 280px;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+            transition: all 0.2s ease;
+            overflow: hidden;
+        }
+
+        .map-node:hover {
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.7);
+        }
+
+        .map-node.completed {
+            opacity: 0.7;
+            background: linear-gradient(135deg, #1b5e20, #2e7d32);
+        }
+
+        .map-node-image {
+            width: 100%;
+            height: 80px;
+            object-fit: cover;
+            opacity: 0.6;
+        }
+
+        .map-node.completed .map-node-image {
+            opacity: 0.4;
+        }
+
+        .map-node-content {
+            padding: 8px 12px;
+            text-align: center;
+        }
+
+        .map-node-name {
+            font-size: 14px;
+            font-weight: bold;
+            color: #90caf9;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+        }
+
+        .map-node.completed .map-node-name {
+            color: #a8d5a8;
+        }
+
+        .map-node-status {
+            font-size: 11px;
+            color: #b0bec5;
+            margin-top: 4px;
+        }
+
+        .quest-node:hover {
+            cursor: pointer;
+        }
+
+        .quest-node.available {
+            border-color: #ffd700;
+            border-width: 3px;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+
+        .quest-node.completed {
+            background: #1b4d2b;
+            border-color: #2e7d4e;
+            border-width: 3px;
+            opacity: 0.85;
+        }
+
+        .quest-node-header {
             display: flex;
             align-items: center;
-            gap: 10px;
-            z-index: 1000;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            pointer-events: all;
+            gap: 12px;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #444;
         }
 
-        #zoom-control label {
+        .trader-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .trader-celeste { background: linear-gradient(135deg, #7b1fa2, #9c27b0); }
+        .trader-shani { background: linear-gradient(135deg, #f57c00, #ff9800); }
+        .trader-lance { background: linear-gradient(135deg, #388e3c, #4caf50); }
+        .trader-tianwen { background: linear-gradient(135deg, #c62828, #e53935); }
+        .trader-apollo { background: linear-gradient(135deg, #0277bd, #0288d1); }
+        .trader-map { background: linear-gradient(135deg, #455a64, #607d8b); }
+
+        .quest-info {
+            flex: 1;
+        }
+
+        .quest-id {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .quest-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #e0e0e0;
+            margin-top: 4px;
+            line-height: 1.3;
+        }
+
+        .quest-node.completed .quest-name {
+            color: #a8d5a8;
+        }
+
+        .quest-node-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            gap: 8px;
+        }
+
+        .quest-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
             font-size: 12px;
             color: #888;
-            white-space: nowrap;
         }
 
-        #zoom-slider {
-            width: 120px;
-            height: 4px;
-            background: #444;
-            border-radius: 2px;
-            outline: none;
-            cursor: pointer;
+        .status-icon {
+            font-size: 16px;
         }
 
-        #zoom-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 14px;
-            height: 14px;
-            background: #4fc3f7;
-            border-radius: 50%;
-            cursor: pointer;
+        .quest-actions {
+            display: flex;
+            gap: 6px;
         }
 
-        #zoom-slider::-moz-range-thumb {
-            width: 14px;
-            height: 14px;
-            background: #4fc3f7;
-            border-radius: 50%;
-            cursor: pointer;
-            border: none;
-        }
-
-        #zoom-value {
-            font-size: 12px;
+        .quest-action-btn {
+            background: #3c3c3c;
+            border: 1px solid #555;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 11px;
             color: #e0e0e0;
-            min-width: 40px;
-            text-align: right;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
         }
 
-        .stats {
-            text-align: center;
-            margin-top: 30px;
-            padding: 20px;
+        .quest-action-btn:hover {
+            background: #4c4c4c;
+            border-color: #777;
+        }
+
+        /* React Flow Controls */
+        .react-flow__controls {
             background: #2c2c2c;
+            border: 1px solid #444;
             border-radius: 8px;
         }
 
-        .stats-content {
+        .react-flow__controls-button {
+            background: #2c2c2c;
+            border-bottom: 1px solid #444;
+            color: #e0e0e0;
+        }
+
+        .react-flow__controls-button:hover {
+            background: #3c3c3c;
+        }
+
+        /* Hide handles */
+        .react-flow__handle {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Edge styles */
+        .react-flow__edge-path {
+            stroke: #555;
+            stroke-width: 2;
+        }
+
+        .react-flow__edge.completed .react-flow__edge-path {
+            stroke: #2e7d4e;
+            stroke-width: 2.5;
+        }
+
+        .react-flow__edge.available .react-flow__edge-path {
+            stroke: #888;
+            stroke-width: 2.5;
+        }
+
+        /* Arrow markers */
+        .react-flow__arrowhead path,
+        .react-flow__arrowhead polyline,
+        .react-flow__arrowhead polygon {
+            fill: #555 !important;
+            stroke: #555 !important;
+        }
+
+        .react-flow__edge.completed .react-flow__arrowhead path,
+        .react-flow__edge.completed .react-flow__arrowhead polyline,
+        .react-flow__edge.completed .react-flow__arrowhead polygon {
+            fill: #2e7d4e !important;
+            stroke: #2e7d4e !important;
+        }
+
+        .react-flow__edge.available .react-flow__arrowhead path,
+        .react-flow__edge.available .react-flow__arrowhead polyline,
+        .react-flow__edge.available .react-flow__arrowhead polygon {
+            fill: #888 !important;
+            stroke: #888 !important;
+        }
+
+        /* Force arrow marker visibility */
+        marker polyline {
+            fill: inherit !important;
+            stroke: inherit !important;
+        }
+
+        /* Header */
+        .app-header {
+            flex-shrink: 0;
+            background: #2c2c2c;
+            padding: 16px 24px;
+            border-bottom: 2px solid #444;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .app-header h1 {
+            font-size: 20px;
+            color: #4fc3f7;
+            text-shadow: 0 0 10px rgba(79, 195, 247, 0.5);
+            margin: 0;
+        }
+
+        /* Graph container */
+        .graph-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Stats */
+        .stats {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            background: rgba(44, 44, 44, 0.95);
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: 1px solid #444;
             display: flex;
-            justify-content: center;
-            gap: 40px;
-            flex-wrap: wrap;
+            gap: 30px;
+            backdrop-filter: blur(10px);
         }
 
         .stat-item {
@@ -151,636 +320,465 @@
         }
 
         .stat-value {
-            font-size: 2em;
+            font-size: 24px;
             font-weight: bold;
             color: #4fc3f7;
         }
 
         .stat-label {
-            font-size: 0.9em;
+            font-size: 11px;
             color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
     </style>
 </head>
 <body>
-    <div id="app">
-        <h1>ARC Raiders Quest Tracker</h1>
-        <div class="controls">
-            <div class="control-group">
-                <button onclick="resetProgress()">Reset All Progress</button>
-            </div>
-            <div class="control-group">
-                <button onclick="centerOnTopAvailable()">Focus Top Available</button>
-                <button onclick="zoomIn()">Zoom In (+)</button>
-                <button onclick="zoomOut()">Zoom Out (-)</button>
-                <button onclick="fitGraph()">Fit All</button>
-            </div>
-        </div>
-        <div id="quest-container">
-            <div id="zoom-control">
-                <label>Zoom:</label>
-                <input type="range" id="zoom-slider" min="0.3" max="2" step="0.1" value="1">
-                <span id="zoom-value">100%</span>
-            </div>
-        </div>
-        <div class="stats">
-            <div class="stats-content">
-                <div class="stat-item">
-                    <div class="stat-value" id="completed-count">0</div>
-                    <div class="stat-label">Completed</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="available-count">0</div>
-                    <div class="stat-label">Available</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="total-count">0</div>
-                    <div class="stat-label">Total Quests</div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <div id="root"></div>
 
-    <script>
-        const QUESTS = [{"id":"ss5","name":"A Bad Feeling","trader":"Celeste","previousQuestIds":["ss4"],"nextQuestIds":["ss5a","ss7","ss8"]},{"id":"ss10x","name":"A Balanced Harvest","trader":"Celeste","previousQuestIds":["ss10s"],"nextQuestIds":["ss10x2"]},{"id":"ss10","name":"A Better Use","trader":"Tian Wen","previousQuestIds":["ss7"],"nextQuestIds":["ss10a"]},{"id":"ss11","name":"A First Foothold","trader":"Shani","previousQuestIds":[],"nextQuestIds":["ss11a"]},{"id":"ss10k","name":"A Lay of the Land","trader":"Shani","previousQuestIds":["ss10g"],"nextQuestIds":["ss10s"]},{"id":"ss10x19","name":"A New Type of Plant","trader":"Lance","previousQuestIds":["ss10x18"],"nextQuestIds":["ss10x20"]},{"id":"ss10g","name":"A Reveal in Ruins","trader":"Lance","previousQuestIds":["ss10f"],"nextQuestIds":["ss10k"]},{"id":"ss10r","name":"A Symbol of Unification","trader":"Celeste","previousQuestIds":["ss10q"],"nextQuestIds":["ss10t","ss10u","ss10v"]},{"id":"a_toxic_trail","name":"A Toxic Trail","trader":"Shani","previousQuestIds":["ss10x20"],"nextQuestIds":["the_stench_of_corruption"]},{"id":"ss10x8","name":"A Warm Place to Rest","trader":"Apollo","previousQuestIds":["ss10x7"],"nextQuestIds":["ss10x9"]},{"id":"ss10y","name":"After Rain Comes","trader":"Celeste","previousQuestIds":["ss10s"],"nextQuestIds":["ss10x4"]},{"id":"ss10x20","name":"Armored Transports","trader":"Shani","previousQuestIds":["ss10x19","ss11bx"],"nextQuestIds":["a_toxic_trail","paving_the_way"]},{"id":"ss10w","name":"Back on Top","trader":"Tian Wen","previousQuestIds":["ss10t"],"nextQuestIds":["ss10z"]},{"id":"ss10x12","name":"Bees!","trader":"Celeste","previousQuestIds":["ss10x11"],"nextQuestIds":["ss10x13"]},{"id":"ss10h","name":"Broken Monument","trader":"Tian Wen","previousQuestIds":["ss10e"],"nextQuestIds":["ss10i","ss10j"]},{"id":"ss10x18","name":"Building a Library","trader":"Apollo","previousQuestIds":["ss10x16"],"nextQuestIds":["ss10x19"]},{"id":"ss10t","name":"Celeste's Journals","trader":"Celeste","previousQuestIds":["ss10r"],"nextQuestIds":["ss10w"]},{"id":"ss2","name":"Clearer Skies","trader":"Shani","previousQuestIds":["ss1"],"nextQuestIds":["ss4"]},{"id":"12_cold_storage","name":"Cold Storage","trader":"Celeste","previousQuestIds":["12_in_my_image"],"nextQuestIds":["12_snap_and_salvage"]},{"id":"ss11b2","name":"Communication Hideout","trader":"Shani","previousQuestIds":["ss11b"],"nextQuestIds":["ss10x5"]},{"id":"deciphering_the_data","name":"Deciphering the Data","trader":"Shani","previousQuestIds":["a_toxic_trail","paving_the_way"],"nextQuestIds":["groundbreaking"]},{"id":"ss10x16","name":"Digging Up Dirt","trader":"Celeste","previousQuestIds":["ss10x15"],"nextQuestIds":["ss10x17","ss10x18"]},{"id":"ss10c","name":"Doctor's Orders","trader":"Celeste","previousQuestIds":["ss10a"],"nextQuestIds":["ss10f"]},{"id":"ss10b","name":"Dormant Barons","trader":"Shani","previousQuestIds":["ss10a"],"nextQuestIds":["ss10d","ss10e"]},{"id":"ss6","name":"Down To Earth","trader":"Shani","previousQuestIds":["ss5a"],"nextQuestIds":["ss9"]},{"id":"ss10p","name":"Echoes of Victory Ridge","trader":"Celeste","previousQuestIds":["ss10o"],"nextQuestIds":["ss10q"]},{"id":"ss10x13","name":"Espresso","trader":"Apollo","previousQuestIds":["ss10x12"],"nextQuestIds":["ss10x14"]},{"id":"ss10s","name":"Eyes in the Sky","trader":"Shani","previousQuestIds":["ss10k"],"nextQuestIds":["ss10w","ss10x","ss10y"]},{"id":"ss10m","name":"Eyes on the Prize","trader":"Tian Wen","previousQuestIds":["ss10l"],"nextQuestIds":["ss10n"]},{"id":"ss10x11","name":"Flickering Threat","trader":"Celeste","previousQuestIds":["ss10x10"],"nextQuestIds":["ss10x12"]},{"id":"ss10a","name":"Greasing Her Palms","trader":"Celeste","previousQuestIds":["ss10"],"nextQuestIds":["ss10b","ss10c"]},{"id":"groundbreaking","name":"Groundbreaking","trader":"Apollo","previousQuestIds":["deciphering_the_data"],"nextQuestIds":[]},{"id":"ss5a","name":"Hatch Repairs","trader":"Shani","previousQuestIds":["ss5"],"nextQuestIds":["ss6"]},{"id":"12_in_my_image","name":"In My Image","trader":"Lance","previousQuestIds":[],"nextQuestIds":["12_cold_storage"]},{"id":"ss10n","name":"Industrial Espionage","trader":"Tian Wen","previousQuestIds":["ss10m"],"nextQuestIds":["ss10q"]},{"id":"ss10x5","name":"Into the Fray","trader":"Shani","previousQuestIds":["ss10x4","ss11b2"],"nextQuestIds":[]},{"id":"ss10o","name":"Keeping the Memory","trader":"Celeste","previousQuestIds":["ss10j"],"nextQuestIds":["ss10p"]},{"id":"ss10x14","name":"Life of a Pharmacist","trader":"Lance","previousQuestIds":["ss10x13"],"nextQuestIds":["ss10x15"]},{"id":"ss11b","name":"Lost in Transmission","trader":"Shani","previousQuestIds":["ss10z"],"nextQuestIds":["ss11b2"]},{"id":"ss10i","name":"Marked for Death","trader":"Tian Wen","previousQuestIds":["ss10h"],"nextQuestIds":["ss10l"]},{"id":"ss10l","name":"Market Correction","trader":"Tian Wen","previousQuestIds":["ss10i"],"nextQuestIds":["ss10m"]},{"id":"ss10f","name":"Medical Merchandise","trader":"Lance","previousQuestIds":["ss10c"],"nextQuestIds":["ss10g"]},{"id":"ss10d","name":"Mixed Signals","trader":"Tian Wen","previousQuestIds":["ss10b"],"nextQuestIds":[]},{"id":"ss4","name":"Off The Radar","trader":"Shani","previousQuestIds":["ss2","ss3"],"nextQuestIds":["ss5"]},{"id":"ss10z","name":"Our Presence Up There","trader":"Shani","previousQuestIds":["ss10w"],"nextQuestIds":["ss11b"]},{"id":"ss10v","name":"Out of the Shadows","trader":"Shani","previousQuestIds":["ss10r"],"nextQuestIds":[]},{"id":"paving_the_way","name":"Paving the Way","trader":"Apollo","previousQuestIds":["ss10x20"],"nextQuestIds":["deciphering_the_data"]},{"id":"ss1","name":"Picking Up The Pieces","trader":"Shani","previousQuestIds":[],"nextQuestIds":["ss2","ss3"]},{"id":"ss10x10","name":"Power Out","trader":"Celeste","previousQuestIds":["ss10x9"],"nextQuestIds":["ss10x11"]},{"id":"ss10x9","name":"Prescriptions of the Past","trader":"Lance","previousQuestIds":["ss10x8"],"nextQuestIds":["ss10x10"]},{"id":"ss11a","name":"Reduced to Rubble","trader":"Shani","previousQuestIds":["ss11"],"nextQuestIds":["ss11bx"]},{"id":"ss8","name":"Safe Passage","trader":"Apollo","previousQuestIds":["ss5"],"nextQuestIds":["ss8a"]},{"id":"12_snap_and_salvage","name":"Snap and Salvage","trader":"Tian Wen","previousQuestIds":["12_cold_storage"],"nextQuestIds":[]},{"id":"ss10x6","name":"Source of the Contamination","trader":"Celeste","previousQuestIds":["ss10x4"],"nextQuestIds":["ss10x7"]},{"id":"ss8b","name":"Sparks Fly","trader":"Apollo","previousQuestIds":["ss8a"],"nextQuestIds":[]},{"id":"ss10j","name":"Straight Record","trader":"Celeste","previousQuestIds":["ss10h"],"nextQuestIds":["ss10o"]},{"id":"ss10x7","name":"Switching the Supply","trader":"Celeste","previousQuestIds":["ss10x6"],"nextQuestIds":["ss10x8"]},{"id":"the_clean_dream","name":"The Clean Dream","trader":"Apollo","previousQuestIds":["ss11bx"],"nextQuestIds":[]},{"id":"ss10u","name":"The Major's Footlocker","trader":"Tian Wen","previousQuestIds":["ss10r"],"nextQuestIds":[]},{"id":"ss7","name":"The Right Tool","trader":"Tian Wen","previousQuestIds":["ss5"],"nextQuestIds":["ss10"]},{"id":"ss10x3","name":"The Root of the Matter","trader":"Celeste","previousQuestIds":["ss10x2"],"nextQuestIds":["ss10x4"]},{"id":"the_stench_of_corruption","name":"The Stench of Corruption","trader":"Shani","previousQuestIds":["a_toxic_trail"],"nextQuestIds":[]},{"id":"ss9","name":"The Trifecta","trader":"Shani","previousQuestIds":["ss6"],"nextQuestIds":[]},{"id":"ss3","name":"Trash Into Treasure","trader":"Shani","previousQuestIds":["ss1"],"nextQuestIds":["ss4"]},{"id":"ss10x15","name":"Tribute to Toledo","trader":"Celeste","previousQuestIds":["ss10x14"],"nextQuestIds":["ss10x16"]},{"id":"ss10x17","name":"Turnabout","trader":"Celeste","previousQuestIds":["ss10x16"],"nextQuestIds":[]},{"id":"ss10q","name":"Unexpected Initiative","trader":"Tian Wen","previousQuestIds":["ss10p","ss10n"],"nextQuestIds":["ss10r"]},{"id":"ss10x2","name":"Untended Garden","trader":"Celeste","previousQuestIds":["ss10x"],"nextQuestIds":["ss10x3"]},{"id":"ss10x4","name":"Water Troubles","trader":"Celeste","previousQuestIds":["ss10x3","ss10y"],"nextQuestIds":["ss10x5","ss10x6"]},{"id":"ss8a","name":"What Goes Around","trader":"Apollo","previousQuestIds":["ss8"],"nextQuestIds":["ss8b"]},{"id":"ss10e","name":"What We Left Behind","trader":"Tian Wen","previousQuestIds":["ss10b"],"nextQuestIds":["ss10h"]},{"id":"ss11bx","name":"With a Trace","trader":"Shani","previousQuestIds":["ss11a"],"nextQuestIds":["the_clean_dream"]}];
+    <!-- React, React DOM, and React Flow via CDN -->
+    <script crossorigin src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone@7.23.5/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reactflow@11.10.4/dist/umd/index.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js"></script>
 
-        let completedQuests = new Set();
-        let questMap = new Map();
+    <script type="text/babel">
+        const { useState, useCallback, useMemo } = React;
+        const { ReactFlow, Controls, Background, useNodesState, useEdgesState, MarkerType, Handle, Position } = window.ReactFlow;
 
-        // Initialize quest map
-        QUESTS.forEach(q => questMap.set(q.id, q));
+        // Map prerequisite nodes (not from arctracker data)
+        const MAP_NODES = [
+            {id: 'map_dam_battleground', name: '🗺️ Dam Battleground', trader: 'Map', previousQuestIds: [], nextQuestIds: ['ss1']},
+            {id: 'map_blue_gate', name: '🗺️ Blue Gate', trader: 'Map', previousQuestIds: [], nextQuestIds: ['ss11']},
+            {id: 'map_stella_montis', name: '🗺️ Stella Montis', trader: 'Map', previousQuestIds: [], nextQuestIds: ['12_in_my_image']}
+        ];
 
-        // Load progress from localStorage
-        function loadProgress() {
-            const saved = localStorage.getItem('arcraiders-quest-progress');
-            if (saved) {
-                completedQuests = new Set(JSON.parse(saved));
-            }
-        }
+        // Quest data from the main tracker
+        const QUEST_DATA = [{"id":"ss5","name":"A Bad Feeling","trader":"Celeste","previousQuestIds":["ss4"],"nextQuestIds":["ss5a","ss7","ss8"]},{"id":"ss10x","name":"A Balanced Harvest","trader":"Celeste","previousQuestIds":["ss10s"],"nextQuestIds":["ss10x2"]},{"id":"ss10","name":"A Better Use","trader":"Tian Wen","previousQuestIds":["ss7"],"nextQuestIds":["ss10a"]},{"id":"ss11","name":"A First Foothold","trader":"Shani","previousQuestIds":["map_blue_gate"],"nextQuestIds":["ss11a"]},{"id":"ss10k","name":"A Lay of the Land","trader":"Shani","previousQuestIds":["ss10g"],"nextQuestIds":["ss10s"]},{"id":"ss10x19","name":"A New Type of Plant","trader":"Lance","previousQuestIds":["ss10x18"],"nextQuestIds":["ss10x20"]},{"id":"ss10g","name":"A Reveal in Ruins","trader":"Lance","previousQuestIds":["ss10f"],"nextQuestIds":["ss10k"]},{"id":"ss10r","name":"A Symbol of Unification","trader":"Celeste","previousQuestIds":["ss10q"],"nextQuestIds":["ss10t","ss10u","ss10v"]},{"id":"a_toxic_trail","name":"A Toxic Trail","trader":"Shani","previousQuestIds":["ss10x20"],"nextQuestIds":["the_stench_of_corruption"]},{"id":"ss10x8","name":"A Warm Place to Rest","trader":"Apollo","previousQuestIds":["ss10x7"],"nextQuestIds":["ss10x9"]},{"id":"ss10y","name":"After Rain Comes","trader":"Celeste","previousQuestIds":["ss10s"],"nextQuestIds":["ss10x4"]},{"id":"ss10x20","name":"Armored Transports","trader":"Shani","previousQuestIds":["ss10x19","ss11bx"],"nextQuestIds":["a_toxic_trail","paving_the_way"]},{"id":"ss10w","name":"Back on Top","trader":"Tian Wen","previousQuestIds":["ss10t"],"nextQuestIds":["ss10z"]},{"id":"ss10x12","name":"Bees!","trader":"Celeste","previousQuestIds":["ss10x11"],"nextQuestIds":["ss10x13"]},{"id":"ss10h","name":"Broken Monument","trader":"Tian Wen","previousQuestIds":["ss10e"],"nextQuestIds":["ss10i","ss10j"]},{"id":"ss10x18","name":"Building a Library","trader":"Apollo","previousQuestIds":["ss10x16"],"nextQuestIds":["ss10x19"]},{"id":"ss10t","name":"Celeste's Journals","trader":"Celeste","previousQuestIds":["ss10r"],"nextQuestIds":["ss10w"]},{"id":"ss2","name":"Clearer Skies","trader":"Shani","previousQuestIds":["ss1"],"nextQuestIds":["ss4"]},{"id":"12_cold_storage","name":"Cold Storage","trader":"Celeste","previousQuestIds":["12_in_my_image"],"nextQuestIds":["12_snap_and_salvage"]},{"id":"ss11b2","name":"Communication Hideout","trader":"Shani","previousQuestIds":["ss11b"],"nextQuestIds":["ss10x5"]},{"id":"deciphering_the_data","name":"Deciphering the Data","trader":"Shani","previousQuestIds":["a_toxic_trail","paving_the_way"],"nextQuestIds":["groundbreaking"]},{"id":"ss10x16","name":"Digging Up Dirt","trader":"Celeste","previousQuestIds":["ss10x15"],"nextQuestIds":["ss10x17","ss10x18"]},{"id":"ss10c","name":"Doctor's Orders","trader":"Celeste","previousQuestIds":["ss10a"],"nextQuestIds":["ss10f"]},{"id":"ss10b","name":"Dormant Barons","trader":"Shani","previousQuestIds":["ss10a"],"nextQuestIds":["ss10d","ss10e"]},{"id":"ss6","name":"Down To Earth","trader":"Shani","previousQuestIds":["ss5a"],"nextQuestIds":["ss9"]},{"id":"ss10p","name":"Echoes of Victory Ridge","trader":"Celeste","previousQuestIds":["ss10o"],"nextQuestIds":["ss10q"]},{"id":"ss10x13","name":"Espresso","trader":"Apollo","previousQuestIds":["ss10x12"],"nextQuestIds":["ss10x14"]},{"id":"ss10s","name":"Eyes in the Sky","trader":"Shani","previousQuestIds":["ss10k"],"nextQuestIds":["ss10w","ss10x","ss10y"]},{"id":"ss10m","name":"Eyes on the Prize","trader":"Tian Wen","previousQuestIds":["ss10l"],"nextQuestIds":["ss10n"]},{"id":"ss10x11","name":"Flickering Threat","trader":"Celeste","previousQuestIds":["ss10x10"],"nextQuestIds":["ss10x12"]},{"id":"ss10a","name":"Greasing Her Palms","trader":"Celeste","previousQuestIds":["ss10"],"nextQuestIds":["ss10b","ss10c"]},{"id":"groundbreaking","name":"Groundbreaking","trader":"Apollo","previousQuestIds":["deciphering_the_data"],"nextQuestIds":[]},{"id":"ss5a","name":"Hatch Repairs","trader":"Shani","previousQuestIds":["ss5"],"nextQuestIds":["ss6"]},{"id":"12_in_my_image","name":"In My Image","trader":"Lance","previousQuestIds":["map_stella_montis"],"nextQuestIds":["12_cold_storage"]},{"id":"ss10n","name":"Industrial Espionage","trader":"Tian Wen","previousQuestIds":["ss10m"],"nextQuestIds":["ss10q"]},{"id":"ss10x5","name":"Into the Fray","trader":"Shani","previousQuestIds":["ss10x4","ss11b2"],"nextQuestIds":[]},{"id":"ss10o","name":"Keeping the Memory","trader":"Celeste","previousQuestIds":["ss10j"],"nextQuestIds":["ss10p"]},{"id":"ss10x14","name":"Life of a Pharmacist","trader":"Lance","previousQuestIds":["ss10x13"],"nextQuestIds":["ss10x15"]},{"id":"ss11b","name":"Lost in Transmission","trader":"Shani","previousQuestIds":["ss10z"],"nextQuestIds":["ss11b2"]},{"id":"ss10i","name":"Marked for Death","trader":"Tian Wen","previousQuestIds":["ss10h"],"nextQuestIds":["ss10l"]},{"id":"ss10l","name":"Market Correction","trader":"Tian Wen","previousQuestIds":["ss10i"],"nextQuestIds":["ss10m"]},{"id":"ss10f","name":"Medical Merchandise","trader":"Lance","previousQuestIds":["ss10c"],"nextQuestIds":["ss10g"]},{"id":"ss10d","name":"Mixed Signals","trader":"Tian Wen","previousQuestIds":["ss10b"],"nextQuestIds":[]},{"id":"ss4","name":"Off The Radar","trader":"Shani","previousQuestIds":["ss2","ss3"],"nextQuestIds":["ss5"]},{"id":"ss10z","name":"Our Presence Up There","trader":"Shani","previousQuestIds":["ss10w"],"nextQuestIds":["ss11b"]},{"id":"ss10v","name":"Out of the Shadows","trader":"Shani","previousQuestIds":["ss10r"],"nextQuestIds":[]},{"id":"paving_the_way","name":"Paving the Way","trader":"Apollo","previousQuestIds":["ss10x20"],"nextQuestIds":["deciphering_the_data"]},{"id":"ss1","name":"Picking Up The Pieces","trader":"Shani","previousQuestIds":["map_dam_battleground"],"nextQuestIds":["ss2","ss3"]},{"id":"ss10x10","name":"Power Out","trader":"Celeste","previousQuestIds":["ss10x9"],"nextQuestIds":["ss10x11"]},{"id":"ss10x9","name":"Prescriptions of the Past","trader":"Lance","previousQuestIds":["ss10x8"],"nextQuestIds":["ss10x10"]},{"id":"ss11a","name":"Reduced to Rubble","trader":"Shani","previousQuestIds":["ss11"],"nextQuestIds":["ss11bx"]},{"id":"ss8","name":"Safe Passage","trader":"Apollo","previousQuestIds":["ss5"],"nextQuestIds":["ss8a"]},{"id":"12_snap_and_salvage","name":"Snap and Salvage","trader":"Tian Wen","previousQuestIds":["12_cold_storage"],"nextQuestIds":[]},{"id":"ss10x6","name":"Source of the Contamination","trader":"Celeste","previousQuestIds":["ss10x4"],"nextQuestIds":["ss10x7"]},{"id":"ss8b","name":"Sparks Fly","trader":"Apollo","previousQuestIds":["ss8a"],"nextQuestIds":[]},{"id":"ss10j","name":"Straight Record","trader":"Celeste","previousQuestIds":["ss10h"],"nextQuestIds":["ss10o"]},{"id":"ss10x7","name":"Switching the Supply","trader":"Celeste","previousQuestIds":["ss10x6"],"nextQuestIds":["ss10x8"]},{"id":"the_clean_dream","name":"The Clean Dream","trader":"Apollo","previousQuestIds":["ss11bx"],"nextQuestIds":[]},{"id":"ss10u","name":"The Major's Footlocker","trader":"Tian Wen","previousQuestIds":["ss10r"],"nextQuestIds":[]},{"id":"ss7","name":"The Right Tool","trader":"Tian Wen","previousQuestIds":["ss5"],"nextQuestIds":["ss10"]},{"id":"ss10x3","name":"The Root of the Matter","trader":"Celeste","previousQuestIds":["ss10x2"],"nextQuestIds":["ss10x4"]},{"id":"the_stench_of_corruption","name":"The Stench of Corruption","trader":"Shani","previousQuestIds":["a_toxic_trail"],"nextQuestIds":[]},{"id":"ss9","name":"The Trifecta","trader":"Shani","previousQuestIds":["ss6"],"nextQuestIds":[]},{"id":"ss3","name":"Trash Into Treasure","trader":"Shani","previousQuestIds":["ss1"],"nextQuestIds":["ss4"]},{"id":"ss10x15","name":"Tribute to Toledo","trader":"Celeste","previousQuestIds":["ss10x14"],"nextQuestIds":["ss10x16"]},{"id":"ss10x17","name":"Turnabout","trader":"Celeste","previousQuestIds":["ss10x16"],"nextQuestIds":[]},{"id":"ss10q","name":"Unexpected Initiative","trader":"Tian Wen","previousQuestIds":["ss10p","ss10n"],"nextQuestIds":["ss10r"]},{"id":"ss10x2","name":"Untended Garden","trader":"Celeste","previousQuestIds":["ss10x"],"nextQuestIds":["ss10x3"]},{"id":"ss10x4","name":"Water Troubles","trader":"Celeste","previousQuestIds":["ss10x3","ss10y"],"nextQuestIds":["ss10x5","ss10x6"]},{"id":"ss8a","name":"What Goes Around","trader":"Apollo","previousQuestIds":["ss8"],"nextQuestIds":["ss8b"]},{"id":"ss10e","name":"What We Left Behind","trader":"Tian Wen","previousQuestIds":["ss10b"],"nextQuestIds":["ss10h"]},{"id":"ss11bx","name":"With a Trace","trader":"Shani","previousQuestIds":["ss11a"],"nextQuestIds":["the_clean_dream"]}];
 
-        // Save progress to localStorage
-        function saveProgress() {
-            localStorage.setItem('arcraiders-quest-progress', JSON.stringify([...completedQuests]));
-        }
+        // Combine maps and quests
+        const QUESTS = [...MAP_NODES, ...QUEST_DATA];
 
-        // Check if quest is available
-        function isQuestAvailable(quest) {
-            if (completedQuests.has(quest.id)) return false;
-            if (quest.previousQuestIds.length === 0) return true;
-            return quest.previousQuestIds.every(id => completedQuests.has(id));
-        }
+        // Map image mapping
+        const MAP_IMAGES = {
+            'map_dam_battleground': 'images/Dam_Battlegrounds.png.webp',
+            'map_blue_gate': 'images/Blue_Gate.png.webp',
+            'map_stella_montis': 'images/Stella_Montis.png.webp'
+        };
 
-        // Get all prerequisite quests that need to be completed before this quest
-        function getPrerequisiteQuests(questId) {
-            const prerequisites = [];
-            const toCheck = [questId];
-            const visited = new Set();
+        // Custom Map Node Component
+        function MapNode({ data }) {
+            const { quest, isCompleted, onToggle } = data;
+            const mapImage = MAP_IMAGES[quest.id];
+            const displayName = quest.name.replace('🗺️ ', ''); // Remove emoji
             
-            while (toCheck.length > 0) {
-                const current = toCheck.shift();
-                if (visited.has(current)) continue;
-                visited.add(current);
-                
-                prerequisites.push(current);
-                
-                // Find all prerequisite quests for the current quest
-                const quest = questMap.get(current);
-                if (quest && quest.previousQuestIds) {
-                    quest.previousQuestIds.forEach(prevId => {
-                        if (!completedQuests.has(prevId)) {
-                            toCheck.push(prevId);
-                        }
-                    });
-                }
-            }
-            
-            return prerequisites;
-        }
-
-        // Get trader color
-        function getTraderColor(trader) {
-            const colors = {
-                'Celeste': '#7b1fa2',
-                'Shani': '#f57c00',
-                'Lance': '#388e3c',
-                'Tian Wen': '#c62828',
-                'Apollo': '#0277bd'
-            };
-            return colors[trader] || '#616161';
-        }
-
-        // Toggle quest completion
-        function toggleQuest(questId) {
-            const quest = questMap.get(questId);
-            
-            if (completedQuests.has(questId)) {
-                // Uncompleting - check for dependent quests
-                const dependents = QUESTS.filter(q => 
-                    q.previousQuestIds.includes(questId) && completedQuests.has(q.id)
-                );
-                
-                if (dependents.length > 0) {
-                    if (!confirm(`Unmarking "${quest.name}" will also unmark ${dependents.length} dependent quest${dependents.length > 1 ? 's' : ''}. Continue?`)) {
-                        return;
-                    }
-                }
-                
-                // Unmark this quest and all dependents
-                completedQuests.delete(questId);
-                dependents.forEach(d => {
-                    unmarkQuestAndDependents(d.id);
-                });
-            } else {
-                // Mark as completed - also mark all prerequisite quests
-                const prerequisites = getPrerequisiteQuests(questId);
-                
-                if (prerequisites.length > 1) {
-                    if (!confirm(`Marking "${quest.name}" as complete will also mark ${prerequisites.length - 1} prerequisite quest${prerequisites.length - 1 > 1 ? 's' : ''} as complete. Continue?`)) {
-                        return;
-                    }
-                }
-                
-                prerequisites.forEach(qid => completedQuests.add(qid));
-            }
-            
-            saveProgress();
-            updateGraph();
-        }
-
-        function unmarkQuestAndDependents(questId) {
-            completedQuests.delete(questId);
-            const dependents = QUESTS.filter(q => 
-                q.previousQuestIds.includes(questId) && completedQuests.has(q.id)
-            );
-            dependents.forEach(d => unmarkQuestAndDependents(d.id));
-        }
-
-        // Cytoscape graph
-        let cy = null;
-        let minZoomLevel = null;  // Store minimum zoom level (fit all level)
-
-        // Initialize Cytoscape graph
-        function initGraph() {
-            // Build nodes and edges
-            const elements = [];
-            
-            // Define quest chain ordering to minimize crossings
-            // Lower priority = placed on the left
-            const questPriorities = {
-                // Far left: A First Foothold chain (highest priority to keep leftmost)
-                'ss11': -1000,
-                'ss11a': -1000,
-                'ss11bx': -1000,
-                // Also prioritize ss10x20 which connects to ss11bx
-                'ss10x20': -900,
-                // Keep these chains separated from the right side quests
-            };
-            
-            // Sort quests: priority quests first, then rest
-            const sortedQuests = [...QUESTS].sort((a, b) => {
-                const prioA = questPriorities[a.id] || 0;
-                const prioB = questPriorities[b.id] || 0;
-                return prioA - prioB;
-            });
-            
-            // Add nodes
-            sortedQuests.forEach(quest => {
-                const isCompleted = completedQuests.has(quest.id);
-                const isAvailable = isQuestAvailable(quest);
-                const priority = questPriorities[quest.id] || 0;
-                
-                // Map nodes: only show name, Quest nodes: show ID and name
-                const label = quest.trader === 'Map' ? quest.name : quest.name;
-                
-                elements.push({
-                    data: { 
-                        id: quest.id, 
-                        label: label,
-                        questId: quest.id,
-                        name: quest.name,
-                        trader: quest.trader,
-                        completed: isCompleted,
-                        available: isAvailable,
-                        priority: priority
-                    }
-                });
-            });
-            
-            // Add edges
-            QUESTS.forEach(quest => {
-                quest.previousQuestIds.forEach(prevId => {
-                    const sourceCompleted = completedQuests.has(prevId);
-                    const targetCompleted = completedQuests.has(quest.id);
-                    const targetAvailable = isQuestAvailable(quest);
-                    
-                    elements.push({
-                        data: { 
-                            source: prevId, 
-                            target: quest.id,
-                            completed: sourceCompleted && targetCompleted,
-                            available: sourceCompleted && targetAvailable
-                        }
-                    });
-                });
-            });
-            
-            // Initialize Cytoscape
-            cy = cytoscape({
-                container: document.getElementById('quest-container'),
-                elements: elements,
-                wheelSensitivity: 0.2,
-                boxSelectionEnabled: false,
-                autoungrabify: true,  // Disable node dragging
-                userZoomingEnabled: false,  // Disable default wheel zooming
-                userPanningEnabled: true,
-                style: [
-                    {
-                        selector: 'node',
-                        style: {
-                            'label': function(ele) {
-                                // For map nodes: just the name
-                                // For quest nodes: ID (smaller appearance) and name
-                                if (ele.data('trader') === 'Map') {
-                                    return ele.data('label');
-                                } else {
-                                    // Format: small ID in parentheses, then larger name
-                                    return '(' + ele.data('questId') + ')\n\n' + ele.data('name');
-                                }
-                            },
-                            'text-valign': 'center',
-                            'text-halign': 'center',
-                            'text-wrap': 'wrap',
-                            'text-max-width': '220px',
-                            'width': 250,
-                            'height': 90,
-                            'shape': 'roundrectangle',
-                            'background-color': '#2c2c2c',
-                            'border-width': 2,
-                            'border-color': '#444',
-                            'color': '#e0e0e0',
-                            'font-size': '14px',
-                            'font-weight': 'bold',
-                            'font-family': 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
-                            'line-height': 1.2
-                        }
-                    },
-                    {
-                        selector: 'node[trader="Map"]',
-                        style: {
-                            'label': 'data(label)',
-                            'width': 200,
-                            'height': 60,
-                            'background-color': '#1a1a1a',
-                            'border-color': '#455a64',
-                            'border-width': 3,
-                            'font-size': '15px',
-                            'font-weight': 'bold'
-                        }
-                    },
-                    {
-                        selector: 'node[completed]',
-                        style: {
-                            'background-color': ele => ele.data('completed') ? '#1b4d2b' : '#2c2c2c',
-                            'border-color': ele => ele.data('completed') ? '#2e7d4e' : '#444',
-                            'border-width': ele => ele.data('completed') ? 3 : 2
-                        }
-                    },
-                    {
-                        selector: 'node[available]',
-                        style: {
-                            'border-color': ele => ele.data('available') && !ele.data('completed') ? '#ffd700' : null,
-                            'border-width': ele => ele.data('available') && !ele.data('completed') ? 3 : 2
-                        }
-                    },
-                    {
-                        selector: 'edge',
-                        style: {
-                            'width': 2,
-                            'line-color': '#555',
-                            'target-arrow-color': '#555',
-                            'target-arrow-shape': 'triangle',
-                            'curve-style': 'bezier',
-                            'arrow-scale': 1.5
-                        }
-                    },
-                    {
-                        selector: 'edge[completed]',
-                        style: {
-                            'line-color': ele => ele.data('completed') ? '#2e7d4e' : '#555',
-                            'target-arrow-color': ele => ele.data('completed') ? '#2e7d4e' : '#555',
-                            'width': ele => ele.data('completed') ? 2.5 : 2
-                        }
-                    },
-                    {
-                        selector: 'edge[available]',
-                        style: {
-                            'line-color': ele => ele.data('available') && !ele.data('completed') ? '#888' : null,
-                            'target-arrow-color': ele => ele.data('available') && !ele.data('completed') ? '#888' : null,
-                            'width': ele => ele.data('available') && !ele.data('completed') ? 2.5 : 2
-                        }
-                    }
-                ],
-                layout: {
-                    name: 'dagre',
-                    rankDir: 'TB',
-                    nodeSep: 80,
-                    rankSep: 100,
-                    padding: 30,
-                    ranker: 'network-simplex',
-                    align: 'UL',  // Align nodes to upper-left
-                    // Sort nodes by priority to control horizontal ordering
-                    sortOrder: function(a, b) {
-                        const priorityA = a.data('priority') || 0;
-                        const priorityB = b.data('priority') || 0;
-                        if (priorityA !== priorityB) {
-                            return priorityA - priorityB;
-                        }
-                        // Secondary sort by ID
-                        return a.id().localeCompare(b.id());
-                    }
-                }
-            });
-            
-            // Add click handler
-            cy.on('tap', 'node', function(evt) {
-                const questId = evt.target.id();
-                toggleQuest(questId);
-            });
-            
-            // Add hover tooltip
-            cy.on('mouseover', 'node', function(evt) {
-                const node = evt.target;
-                const quest = questMap.get(node.id());
-                if (quest) {
-                    node.style('background-color', '#3c3c3c');
-                }
-            });
-            
-            cy.on('mouseout', 'node', function(evt) {
-                const node = evt.target;
-                const isCompleted = node.data('completed');
-                node.style('background-color', isCompleted ? '#1b4d2b' : '#2c2c2c');
-            });
-            
-            // Add right-click for wiki link
-            cy.on('cxttap', 'node', function(evt) {
-                const questId = evt.target.id();
-                const quest = questMap.get(questId);
-                if (quest) {
-                    const wikiLink = quest.name.split(' ').map(word => 
-                        word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-                    ).join('_');
-                    window.open(`https://arcraiders.wiki/wiki/${wikiLink}`, '_blank');
-                }
-            });
-            
-            // Custom wheel handler: normal scroll = pan, shift+scroll = zoom
-            const container = cy.container();
-            container.addEventListener('wheel', function(e) {
-                // Ignore events on the zoom control
-                if (e.target.closest('#zoom-control')) {
-                    return;
-                }
-                
-                e.preventDefault();
+            const handleClick = (e) => {
                 e.stopPropagation();
-                
-                if (e.shiftKey) {
-                    // Shift + wheel = zoom (less sensitive for Magic Mouse/trackpad)
-                    const zoomDelta = e.deltaY > 0 ? 0.97 : 1.03;
-                    const newZoom = cy.zoom() * zoomDelta;
-                    const constrainedZoom = Math.max(minZoomLevel || 0.3, Math.min(2, newZoom));
-                    cy.zoom({
-                        level: constrainedZoom,
-                        renderedPosition: { x: e.offsetX, y: e.offsetY }
-                    });
-                    updateZoomSlider();
-                } else {
-                    // Normal wheel = pan (handle both vertical and horizontal scrolling)
-                    const pan = cy.pan();
-                    cy.pan({
-                        x: pan.x - e.deltaX,
-                        y: pan.y - e.deltaY
-                    });
-                }
-            }, { passive: false, capture: true });
+                onToggle(quest.id);
+            };
 
-            // Zoom slider control
-            const zoomSlider = document.getElementById('zoom-slider');
-            const zoomValue = document.getElementById('zoom-value');
-            const zoomControl = document.getElementById('zoom-control');
-            
-            // Prevent all events on zoom control from reaching Cytoscape
-            ['mousedown', 'mouseup', 'click', 'dblclick', 'touchstart', 'touchend'].forEach(eventType => {
-                zoomControl.addEventListener(eventType, function(e) {
-                    e.stopPropagation();
-                }, true);
-            });
-            
-            zoomSlider.addEventListener('input', function() {
-                const zoom = parseFloat(this.value);
-                cy.zoom({
-                    level: zoom,
-                    renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 }
-                });
-                zoomValue.textContent = Math.round(zoom * 100) + '%';
-            });
-
-            // Update zoom slider when zoom changes
-            function updateZoomSlider() {
-                const zoom = cy.zoom();
-                zoomSlider.value = zoom;
-                zoomValue.textContent = Math.round(zoom * 100) + '%';
-            }
-
-            cy.on('zoom', updateZoomSlider);
-            
-            // Constrain zoom to not go below fit level
-            cy.on('zoom', function() {
-                if (minZoomLevel !== null && cy.zoom() < minZoomLevel) {
-                    cy.zoom(minZoomLevel);
-                }
-            });
-            
-            // Calculate and store minimum zoom level after layout, set to readable zoom
-            setTimeout(() => {
-                cy.fit(null, 30);
-                minZoomLevel = cy.zoom();
-                // Set initial zoom to 0.9 (90%) for readability
-                cy.zoom(0.9);
-                updateZoomSlider();
-                centerOnTopAvailable();
-            }, 100);
-        }
-
-        // Update graph with current state
-        function updateGraph() {
-            if (!cy) return;
-            
-            // Start batch to avoid multiple redraws
-            cy.startBatch();
-            
-            cy.nodes().forEach(node => {
-                const questId = node.id();
-                const quest = questMap.get(questId);
-                const isCompleted = completedQuests.has(questId);
-                const isAvailable = isQuestAvailable(quest);
-                
-                node.data('completed', isCompleted);
-                node.data('available', isAvailable);
-                
-                // Reset all node styles explicitly
-                if (isCompleted) {
-                    node.style({
-                        'background-color': '#1b4d2b',
-                        'border-color': '#2e7d4e',
-                        'border-width': 3
-                    });
-                } else if (isAvailable) {
-                    node.style({
-                        'background-color': '#2c2c2c',
-                        'border-color': '#ffd700',
-                        'border-width': 3
-                    });
-                } else {
-                    node.style({
-                        'background-color': '#2c2c2c',
-                        'border-color': '#444',
-                        'border-width': 2
-                    });
-                }
-            });
-            
-            cy.edges().forEach(edge => {
-                const sourceId = edge.source().id();
-                const targetId = edge.target().id();
-                const sourceCompleted = completedQuests.has(sourceId);
-                const targetCompleted = completedQuests.has(targetId);
-                const targetQuest = questMap.get(targetId);
-                const targetAvailable = isQuestAvailable(targetQuest);
-                
-                edge.data('completed', sourceCompleted && targetCompleted);
-                edge.data('available', sourceCompleted && targetAvailable);
-            });
-            
-            cy.endBatch();
-            
-            updateStats();
-        }
-
-        // Update stats
-        function updateStats() {
-            const available = QUESTS.filter(q => isQuestAvailable(q)).length;
-            document.getElementById('completed-count').textContent = completedQuests.size;
-            document.getElementById('available-count').textContent = available;
-            document.getElementById('total-count').textContent = QUESTS.length;
-        }
-
-        // Zoom and focus controls
-        function focusAvailable() {
-            if (!cy) return;
-            
-            // Get available quest nodes
-            const availableNodes = cy.nodes().filter(node => {
-                const questId = node.id();
-                const quest = questMap.get(questId);
-                return quest && isQuestAvailable(quest) && !completedQuests.has(questId);
-            });
-            
-            if (availableNodes.length === 0) {
-                // If no available quests, fit the whole graph
-                fitGraph();
-                return;
-            }
-            
-            // Get all predecessors and successors for context
-            const contextNodes = availableNodes.union(
-                availableNodes.predecessors('node'),
-                availableNodes.successors('node')
+            return (
+                <div className={`map-node ${isCompleted ? 'completed' : ''}`} onClick={handleClick}>
+                    <Handle type="target" position={Position.Top} />
+                    {mapImage && <img src={mapImage} alt={displayName} className="map-node-image" />}
+                    <div className="map-node-content">
+                        <div className="map-node-name">{displayName}</div>
+                        <div className="map-node-status">
+                            {isCompleted ? '✓ Unlocked' : '🔒 Locked'}
+                        </div>
+                    </div>
+                    <Handle type="source" position={Position.Bottom} />
+                </div>
             );
-            
-            // Fit to these nodes with padding
-            cy.fit(contextNodes, 50);
-            
-            // If the zoom is too close, zoom out a bit for better context
-            if (cy.zoom() > 1.2) {
-                cy.zoom({
-                    level: Math.min(cy.zoom(), 1.2),
-                    renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 }
-                });
-            }
         }
 
-        function centerOnTopAvailable() {
-            if (!cy) return;
+        // Custom Quest Node Component
+        function QuestNode({ data }) {
+            const { quest, isCompleted, isAvailable, onToggle } = data;
             
-            // Get available quest nodes
-            const availableNodes = cy.nodes().filter(node => {
-                const questId = node.id();
-                const quest = questMap.get(questId);
-                return quest && isQuestAvailable(quest) && !completedQuests.has(questId);
-            });
-            
-            if (availableNodes.length === 0) {
-                return;
-            }
-            
-            // Find the topmost available node (minimum y position)
-            let topNode = null;
-            let minY = Infinity;
-            
-            availableNodes.forEach(node => {
-                const pos = node.position();
-                if (pos.y < minY) {
-                    minY = pos.y;
-                    topNode = node;
+            const traderClass = `trader-${quest.trader.toLowerCase().replace(' ', '')}`;
+            const nodeClass = `quest-node ${isCompleted ? 'completed' : ''} ${isAvailable ? 'available' : ''}`;
+
+            const getTraderInitial = (trader) => {
+                return trader.split(' ').map(w => w[0]).join('');
+            };
+
+            const handleClick = (e) => {
+                e.stopPropagation();
+                onToggle(quest.id);
+            };
+
+            return (
+                <div className={nodeClass} onClick={handleClick}>
+                    <Handle type="target" position={Position.Top} />
+                    <div className="quest-node-header">
+                        <div className={`trader-icon ${traderClass}`}>
+                            {getTraderInitial(quest.trader)}
+                        </div>
+                        <div className="quest-info">
+                            <div className="quest-id">{quest.id}</div>
+                            <div className="quest-name">{quest.name}</div>
+                        </div>
+                    </div>
+
+                    <div className="quest-node-footer">
+                        <div className="quest-status">
+                            <span className="status-icon">
+                                {isCompleted ? '✓' : isAvailable ? '⭐' : '🔒'}
+                            </span>
+                            <span>
+                                {isCompleted ? 'Completed' : isAvailable ? 'Available' : 'Locked'}
+                            </span>
+                        </div>
+                        <div className="quest-actions">
+                            <a 
+                                href={`https://arcraiders.wiki/wiki/${quest.name.replace(/ /g, '_')}`}
+                                target="_blank"
+                                className="quest-action-btn"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                📖 Wiki
+                            </a>
+                        </div>
+                    </div>
+                    <Handle type="source" position={Position.Bottom} />
+                </div>
+            );
+        }
+
+        // Main App Component
+        function QuestTracker() {
+            // Load completed quests from localStorage
+            const loadCompletedQuests = () => {
+                try {
+                    const saved = localStorage.getItem('arcraiders-quest-progress-reactflow');
+                    if (saved) {
+                        return new Set(JSON.parse(saved));
+                    }
+                } catch (e) {
+                    console.error('Failed to load quest progress:', e);
                 }
-            });
+                return new Set();
+            };
+
+            const [completedQuests, setCompletedQuests] = useState(loadCompletedQuests);
             
-            if (topNode) {
-                // Center on this node without changing zoom
-                cy.center(topNode);
-            }
+            // Save to localStorage whenever completedQuests changes
+            React.useEffect(() => {
+                try {
+                    localStorage.setItem('arcraiders-quest-progress-reactflow', JSON.stringify(Array.from(completedQuests)));
+                } catch (e) {
+                    console.error('Failed to save quest progress:', e);
+                }
+            }, [completedQuests]);
+            
+            // Node types registration
+            const nodeTypes = useMemo(() => ({ 
+                questNode: QuestNode,
+                mapNode: MapNode 
+            }), []);
+
+            // Check if quest is available
+            const isQuestAvailable = useCallback((quest) => {
+                if (completedQuests.has(quest.id)) return false;
+                if (quest.previousQuestIds.length === 0) return true;
+                return quest.previousQuestIds.every(id => completedQuests.has(id));
+            }, [completedQuests]);
+
+            // Get all quests that depend on this quest (recursively)
+            const getAllDependents = useCallback((questId, completed) => {
+                const dependents = new Set();
+                const toCheck = [questId];
+                
+                while (toCheck.length > 0) {
+                    const current = toCheck.pop();
+                    const quest = QUESTS.find(q => q.id === current);
+                    if (quest) {
+                        quest.nextQuestIds.forEach(nextId => {
+                            if (completed.has(nextId) && !dependents.has(nextId)) {
+                                dependents.add(nextId);
+                                toCheck.push(nextId);
+                            }
+                        });
+                    }
+                }
+                return dependents;
+            }, []);
+
+            // Get all prerequisites recursively
+            const getAllPrerequisites = useCallback((questId) => {
+                const prerequisites = new Set();
+                const toCheck = [questId];
+                
+                while (toCheck.length > 0) {
+                    const current = toCheck.pop();
+                    const quest = QUESTS.find(q => q.id === current);
+                    if (quest) {
+                        quest.previousQuestIds.forEach(prevId => {
+                            if (!prerequisites.has(prevId)) {
+                                prerequisites.add(prevId);
+                                toCheck.push(prevId);
+                            }
+                        });
+                    }
+                }
+                return prerequisites;
+            }, []);
+
+            // Toggle quest completion
+            const toggleQuest = useCallback((questId) => {
+                setCompletedQuests(prev => {
+                    const quest = QUESTS.find(q => q.id === questId);
+                    if (!quest) return prev;
+
+                    if (prev.has(questId)) {
+                        // Uncompleting a quest - check for completed dependents
+                        const dependents = getAllDependents(questId, prev);
+                        
+                        if (dependents.size > 0) {
+                            const dependentNames = Array.from(dependents)
+                                .map(id => QUESTS.find(q => q.id === id)?.name)
+                                .filter(Boolean);
+                            
+                            const confirmed = window.confirm(
+                                `Marking "${quest.name}" as incomplete will also mark ${dependents.size} dependent quest(s) as incomplete:\n\n` +
+                                dependentNames.slice(0, 5).join('\n') +
+                                (dependentNames.length > 5 ? `\n...and ${dependentNames.length - 5} more` : '') +
+                                `\n\nDo you want to continue?`
+                            );
+                            
+                            if (!confirmed) return prev;
+                            
+                            // Remove quest and all dependents
+                            const newSet = new Set(prev);
+                            newSet.delete(questId);
+                            dependents.forEach(id => newSet.delete(id));
+                            return newSet;
+                        } else {
+                            // No dependents, just uncomplete
+                            const newSet = new Set(prev);
+                            newSet.delete(questId);
+                            return newSet;
+                        }
+                    } else {
+                        // Completing a quest - check for incomplete prerequisites
+                        const incompletePrereqs = quest.previousQuestIds.filter(id => !prev.has(id));
+                        
+                        if (incompletePrereqs.length > 0) {
+                            const allPrereqs = getAllPrerequisites(questId);
+                            const incompleteAll = Array.from(allPrereqs).filter(id => !prev.has(id));
+                            const prereqNames = incompleteAll
+                                .map(id => QUESTS.find(q => q.id === id)?.name)
+                                .filter(Boolean);
+                            
+                            const confirmed = window.confirm(
+                                `"${quest.name}" has ${incompleteAll.length} incomplete prerequisite(s):\n\n` +
+                                prereqNames.slice(0, 5).join('\n') +
+                                (prereqNames.length > 5 ? `\n...and ${prereqNames.length - 5} more` : '') +
+                                `\n\nDo you want to auto-complete all prerequisites?`
+                            );
+                            
+                            if (!confirmed) return prev;
+                            
+                            // Add quest and all prerequisites
+                            const newSet = new Set(prev);
+                            incompleteAll.forEach(id => newSet.add(id));
+                            newSet.add(questId);
+                            return newSet;
+                        } else {
+                            // All prerequisites complete, just complete this quest
+                            const newSet = new Set(prev);
+                            newSet.add(questId);
+                            return newSet;
+                        }
+                    }
+                });
+            }, [getAllDependents, getAllPrerequisites]);
+
+            // Create nodes using Dagre layout
+            const { nodes, edges } = useMemo(() => {
+                const g = new dagre.graphlib.Graph();
+                g.setGraph({ rankdir: 'TB', nodesep: 50, ranksep: 70 });
+                g.setDefaultEdgeLabel(() => ({}));
+
+                // Add nodes to dagre with appropriate dimensions
+                QUESTS.forEach(quest => {
+                    const isMap = quest.trader === 'Map';
+                    g.setNode(quest.id, { 
+                        width: 300,  // Same width for both
+                        height: isMap ? 110 : 140 
+                    });
+                });
+
+                // Add edges to dagre
+                QUESTS.forEach(quest => {
+                    quest.previousQuestIds.forEach(prevId => {
+                        g.setEdge(prevId, quest.id);
+                    });
+                });
+
+                dagre.layout(g);
+
+                // Create React Flow nodes
+                const flowNodes = QUESTS.map(quest => {
+                    const nodeWithPosition = g.node(quest.id);
+                    const isMap = quest.trader === 'Map';
+                    const nodeType = isMap ? 'mapNode' : 'questNode';
+                    const width = 300;  // Same width for both types
+                    const height = isMap ? 110 : 140;
+                    
+                    return {
+                        id: quest.id,
+                        type: nodeType,
+                        position: { 
+                            x: nodeWithPosition.x - (width / 2), 
+                            y: nodeWithPosition.y - (height / 2) 
+                        },
+                        data: {
+                            quest,
+                            isCompleted: completedQuests.has(quest.id),
+                            isAvailable: isQuestAvailable(quest),
+                            onToggle: toggleQuest
+                        },
+                        draggable: false
+                    };
+                });
+
+                // Create React Flow edges
+                const flowEdges = [];
+                QUESTS.forEach(quest => {
+                    quest.previousQuestIds.forEach(prevId => {
+                        const sourceCompleted = completedQuests.has(prevId);
+                        const targetCompleted = completedQuests.has(quest.id);
+                        const targetAvailable = isQuestAvailable(quest);
+                        
+                        let className = '';
+                        if (sourceCompleted && targetCompleted) {
+                            className = 'completed';
+                        } else if (sourceCompleted && targetAvailable) {
+                            className = 'available';
+                        }
+
+                        const edge = {
+                            id: `${prevId}-${quest.id}`,
+                            source: prevId,
+                            target: quest.id,
+                            type: 'default',
+                            className,
+                            animated: targetAvailable && !targetCompleted,
+                            markerEnd: {
+                                type: MarkerType.ArrowClosed,
+                                color: className === 'completed' ? '#2e7d4e' : className === 'available' ? '#888' : '#555'
+                            },
+                            style: {
+                                stroke: className === 'completed' ? '#2e7d4e' : className === 'available' ? '#888' : '#555',
+                                strokeWidth: className === 'completed' ? 2.5 : className === 'available' ? 2.5 : 2
+                            }
+                        };
+                        flowEdges.push(edge);
+                    });
+                });
+
+                return { nodes: flowNodes, edges: flowEdges };
+            }, [completedQuests, isQuestAvailable, toggleQuest]);
+
+            // Initialize state hooks with the computed nodes and edges
+            const [flowNodes, setNodes, onNodesChange] = useNodesState(nodes);
+            const [flowEdges, setEdges, onEdgesChange] = useEdgesState(edges);
+
+            // Update nodes and edges when completedQuests changes
+            React.useEffect(() => {
+                setNodes(nodes);
+            }, [nodes, setNodes]);
+            
+            React.useEffect(() => {
+                setEdges(edges);
+            }, [edges, setEdges]);
+
+            // Filter out map nodes for statistics
+            const actualQuests = QUESTS.filter(q => q.trader !== 'Map');
+            const availableCount = actualQuests.filter(q => isQuestAvailable(q)).length;
+            const completedCount = actualQuests.filter(q => completedQuests.has(q.id)).length;
+
+            // Handle node clicks
+            const onNodeClick = useCallback((event, node) => {
+                node.data.onToggle(node.id);
+            }, []);
+
+            // Calculate bounds for translateExtent
+            const bounds = useMemo(() => {
+                if (nodes.length === 0) return [[0, 0], [1000, 1000]];
+                
+                let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                nodes.forEach(node => {
+                    minX = Math.min(minX, node.position.x);
+                    minY = Math.min(minY, node.position.y);
+                    maxX = Math.max(maxX, node.position.x + 300); // node width
+                    maxY = Math.max(maxY, node.position.y + 140); // node height
+                });
+                
+                // Add padding
+                const padding = 100;
+                return [
+                    [minX - padding, minY - padding],
+                    [maxX + padding, maxY + padding]
+                ];
+            }, [nodes]);
+
+            return (
+                <>
+                    <div className="app-header">
+                        <h1>🎮 ARC Raiders Quest Tracker</h1>
+                    </div>
+
+                    <div className="graph-container">
+                        <ReactFlow
+                            nodes={flowNodes}
+                            edges={flowEdges}
+                            onNodesChange={onNodesChange}
+                            onEdgesChange={onEdgesChange}
+                            onNodeClick={onNodeClick}
+                            nodeTypes={nodeTypes}
+                            defaultEdgeOptions={{
+                                type: 'default',
+                                markerEnd: { type: MarkerType.ArrowClosed },
+                                style: { strokeWidth: 2 }
+                            }}
+                            translateExtent={bounds}
+                            fitView
+                            minZoom={0.3}
+                            maxZoom={1.5}
+                            defaultViewport={{ x: 0, y: 0, zoom: 0.5 }}
+                            nodesDraggable={false}
+                            nodesConnectable={false}
+                        >
+                            <Controls />
+                            <Background color="#2c2c2c" gap={16} />
+                        </ReactFlow>
+
+                        <div className="stats">
+                            <div className="stat-item">
+                                <div className="stat-value">{completedCount}</div>
+                                <div className="stat-label">Completed</div>
+                            </div>
+                            <div className="stat-item">
+                                <div className="stat-value">{availableCount}</div>
+                                <div className="stat-label">Available</div>
+                            </div>
+                        <div className="stat-item">
+                            <div className="stat-value">{actualQuests.length}</div>
+                            <div className="stat-label">Total</div>
+                        </div>
+                        </div>
+                    </div>
+                </>
+            );
         }
 
-        function zoomIn() {
-            if (!cy) return;
-            cy.zoom({
-                level: cy.zoom() * 1.2,
-                renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 }
-            });
-        }
-
-        function zoomOut() {
-            if (!cy) return;
-            const newZoom = cy.zoom() * 0.8;
-            // Don't zoom out past the minimum (fit all) level
-            const targetZoom = minZoomLevel !== null ? Math.max(newZoom, minZoomLevel) : newZoom;
-            cy.zoom({
-                level: targetZoom,
-                renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 }
-            });
-        }
-
-        function fitGraph() {
-            if (!cy) return;
-            cy.fit(null, 30);
-            minZoomLevel = cy.zoom();  // Update minimum zoom level
-        }
-
-        // Controls
-        function resetProgress() {
-            if (confirm('Reset all quest progress? This cannot be undone.')) {
-                completedQuests.clear();
-                saveProgress();
-                updateGraph();
-            }
-        }
-
-        // Initialize
-        loadProgress();
-        initGraph();
-        updateStats();
+        // Render the app
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<QuestTracker />);
     </script>
 </body>
 </html>

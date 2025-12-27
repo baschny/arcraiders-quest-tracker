@@ -4,7 +4,7 @@ This document explains how to maintain and update the ARC Raiders Quest Tracker 
 
 ## Overview
 
-The quest tracker is a single-file HTML application (`index.html`) that visualizes quest dependencies using Cytoscape.js with Dagre layout. Quest data is embedded directly in the JavaScript code.
+The quest tracker is a single-file HTML application (`index.html`) that visualizes quest dependencies using React Flow with Dagre layout. Quest data is embedded directly in the JavaScript code.
 
 ## Quest Data Structure
 
@@ -53,8 +53,11 @@ quests.forEach(q => {
   if (q.id === '12_in_my_image') q.previousQuestIds = ['map_stella_montis'];
 });
 
-const allQuests = [...maps, ...quests];
-const newHtml = html.replace(/const QUESTS = \[.*?\];/s, 'const QUESTS = ' + JSON.stringify(allQuests) + ';');
+const allQuests = [...quests];
+
+// Update QUEST_DATA array in index.html
+const questDataRegex = /const QUEST_DATA = \[.*?\];/s;
+const newHtml = html.replace(questDataRegex, 'const QUEST_DATA = ' + JSON.stringify(allQuests) + ';');
 fs.writeFileSync('quest-tracker/index.html', newHtml);
 console.log('Updated quest data successfully');
 ```
