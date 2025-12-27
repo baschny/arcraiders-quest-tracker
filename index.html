@@ -71,6 +71,64 @@
             background: #1a1a1a;
             border: 1px solid #444;
             border-radius: 8px;
+            position: relative;
+        }
+
+        #zoom-control {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: #2c2c2c;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            pointer-events: all;
+        }
+
+        #zoom-control label {
+            font-size: 12px;
+            color: #888;
+            white-space: nowrap;
+        }
+
+        #zoom-slider {
+            width: 120px;
+            height: 4px;
+            background: #444;
+            border-radius: 2px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        #zoom-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            background: #4fc3f7;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        #zoom-slider::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            background: #4fc3f7;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+
+        #zoom-value {
+            font-size: 12px;
+            color: #e0e0e0;
+            min-width: 40px;
+            text-align: right;
         }
 
         .stats {
@@ -114,13 +172,19 @@
                 <button onclick="importProgress()">Import Progress</button>
             </div>
             <div class="control-group">
-                <button onclick="focusAvailable()">Focus Available Quests</button>
+                <button onclick="centerOnTopAvailable()">Focus Top Available</button>
                 <button onclick="zoomIn()">Zoom In (+)</button>
                 <button onclick="zoomOut()">Zoom Out (-)</button>
                 <button onclick="fitGraph()">Fit All</button>
             </div>
         </div>
-        <div id="quest-container"></div>
+        <div id="quest-container">
+            <div id="zoom-control">
+                <label>Zoom:</label>
+                <input type="range" id="zoom-slider" min="0.3" max="2" step="0.1" value="1">
+                <span id="zoom-value">100%</span>
+            </div>
+        </div>
         <div class="stats">
             <div class="stats-content">
                 <div class="stat-item">
@@ -140,7 +204,7 @@
     </div>
 
     <script>
-        const QUESTS = [{"id":"map_dam_battleground","name":"🗺️ Dam Battleground","trader":"Map","previousQuestIds":[],"nextQuestIds":["ss1"]},{"id":"map_blue_gate","name":"🗺️ Blue Gate","trader":"Map","previousQuestIds":[],"nextQuestIds":["ss11"]},{"id":"map_stella_montis","name":"🗺️ Stella Montis","trader":"Map","previousQuestIds":[],"nextQuestIds":["12_in_my_image"]},{"id":"ss5","name":"A Bad Feeling","trader":"Celeste","previousQuestIds":["ss4"],"nextQuestIds":["ss5a","ss7","ss8"]},{"id":"ss10x","name":"A Balanced Harvest","trader":"Celeste","previousQuestIds":["ss10s"],"nextQuestIds":["ss10x2"]},{"id":"ss10","name":"A Better Use","trader":"Tian Wen","previousQuestIds":["ss7"],"nextQuestIds":["ss10a"]},{"id":"ss11","name":"A First Foothold","trader":"Shani","previousQuestIds":["map_blue_gate"],"nextQuestIds":["ss11a"]},{"id":"ss10k","name":"A Lay of the Land","trader":"Shani","previousQuestIds":["ss10g"],"nextQuestIds":["ss10s"]},{"id":"ss10x19","name":"A New Type of Plant","trader":"Lance","previousQuestIds":["ss10x18"],"nextQuestIds":["ss10x20"]},{"id":"ss10g","name":"A Reveal in Ruins","trader":"Lance","previousQuestIds":["ss10f"],"nextQuestIds":["ss10k"]},{"id":"ss10r","name":"A Symbol of Unification","trader":"Celeste","previousQuestIds":["ss10q"],"nextQuestIds":["ss10t","ss10u","ss10v"]},{"id":"a_toxic_trail","name":"A Toxic Trail","trader":"Shani","previousQuestIds":["ss10x20"],"nextQuestIds":["the_stench_of_corruption"]},{"id":"ss10x8","name":"A Warm Place to Rest","trader":"Apollo","previousQuestIds":["ss10x7"],"nextQuestIds":["ss10x9"]},{"id":"ss10y","name":"After Rain Comes","trader":"Celeste","previousQuestIds":["ss10s"],"nextQuestIds":["ss10x4"]},{"id":"ss10x20","name":"Armored Transports","trader":"Shani","previousQuestIds":["ss10x19","ss11bx"],"nextQuestIds":["a_toxic_trail","paving_the_way","the_clean_dream"]},{"id":"ss10w","name":"Back on Top","trader":"Tian Wen","previousQuestIds":["ss10t"],"nextQuestIds":["ss10z"]},{"id":"ss10x12","name":"Bees!","trader":"Celeste","previousQuestIds":["ss10x11"],"nextQuestIds":["ss10x13"]},{"id":"ss10h","name":"Broken Monument","trader":"Tian Wen","previousQuestIds":["ss10e"],"nextQuestIds":["ss10i","ss10j"]},{"id":"ss10x18","name":"Building a Library","trader":"Apollo","previousQuestIds":["ss10x16"],"nextQuestIds":["ss10x19"]},{"id":"ss10t","name":"Celeste's Journals","trader":"Celeste","previousQuestIds":["ss10r"],"nextQuestIds":["ss10w"]},{"id":"ss2","name":"Clearer Skies","trader":"Shani","previousQuestIds":["ss1"],"nextQuestIds":["ss4"]},{"id":"12_cold_storage","name":"Cold Storage","trader":"Celeste","previousQuestIds":["12_in_my_image"],"nextQuestIds":["12_snap_and_salvage"]},{"id":"ss11b2","name":"Communication Hideout","trader":"Shani","previousQuestIds":["ss11b"],"nextQuestIds":["ss10x5"]},{"id":"deciphering_the_data","name":"Deciphering the Data","trader":"Shani","previousQuestIds":["a_toxic_trail","paving_the_way"],"nextQuestIds":["groundbreaking"]},{"id":"ss10x16","name":"Digging Up Dirt","trader":"Celeste","previousQuestIds":["ss10x15"],"nextQuestIds":["ss10x17","ss10x18"]},{"id":"ss10c","name":"Doctor's Orders","trader":"Celeste","previousQuestIds":["ss10a"],"nextQuestIds":["ss10f"]},{"id":"ss10b","name":"Dormant Barons","trader":"Shani","previousQuestIds":["ss10a"],"nextQuestIds":["ss10d","ss10e"]},{"id":"ss6","name":"Down To Earth","trader":"Shani","previousQuestIds":["ss5a"],"nextQuestIds":["ss9"]},{"id":"ss10p","name":"Echoes of Victory Ridge","trader":"Celeste","previousQuestIds":["ss10o"],"nextQuestIds":["ss10q"]},{"id":"ss10x13","name":"Espresso","trader":"Apollo","previousQuestIds":["ss10x12"],"nextQuestIds":["ss10x14"]},{"id":"ss10s","name":"Eyes in the Sky","trader":"Shani","previousQuestIds":["ss10k"],"nextQuestIds":["ss10w","ss10x","ss10y"]},{"id":"ss10m","name":"Eyes on the Prize","trader":"Tian Wen","previousQuestIds":["ss10l"],"nextQuestIds":["ss10n"]},{"id":"ss10x11","name":"Flickering Threat","trader":"Celeste","previousQuestIds":["ss10x10"],"nextQuestIds":["ss10x12"]},{"id":"ss10a","name":"Greasing Her Palms","trader":"Celeste","previousQuestIds":["ss10"],"nextQuestIds":["ss10b","ss10c"]},{"id":"groundbreaking","name":"Groundbreaking","trader":"Apollo","previousQuestIds":["deciphering_the_data"],"nextQuestIds":[]},{"id":"ss5a","name":"Hatch Repairs","trader":"Shani","previousQuestIds":["ss5"],"nextQuestIds":["ss6"]},{"id":"12_in_my_image","name":"In My Image","trader":"Lance","previousQuestIds":["map_stella_montis"],"nextQuestIds":["12_cold_storage"]},{"id":"ss10n","name":"Industrial Espionage","trader":"Tian Wen","previousQuestIds":["ss10m"],"nextQuestIds":["ss10q"]},{"id":"ss10x5","name":"Into the Fray","trader":"Shani","previousQuestIds":["ss10x4","ss11b2"],"nextQuestIds":[]},{"id":"ss10o","name":"Keeping the Memory","trader":"Celeste","previousQuestIds":["ss10j"],"nextQuestIds":["ss10p"]},{"id":"ss10x14","name":"Life of a Pharmacist","trader":"Lance","previousQuestIds":["ss10x13"],"nextQuestIds":["ss10x15"]},{"id":"ss11b","name":"Lost in Transmission","trader":"Shani","previousQuestIds":["ss10z"],"nextQuestIds":["ss11b2"]},{"id":"ss10i","name":"Marked for Death","trader":"Tian Wen","previousQuestIds":["ss10h"],"nextQuestIds":["ss10l"]},{"id":"ss10l","name":"Market Correction","trader":"Tian Wen","previousQuestIds":["ss10i"],"nextQuestIds":["ss10m"]},{"id":"ss10f","name":"Medical Merchandise","trader":"Lance","previousQuestIds":["ss10c"],"nextQuestIds":["ss10g"]},{"id":"ss10d","name":"Mixed Signals","trader":"Tian Wen","previousQuestIds":["ss10b"],"nextQuestIds":[]},{"id":"ss4","name":"Off The Radar","trader":"Shani","previousQuestIds":["ss2","ss3"],"nextQuestIds":["ss5"]},{"id":"ss10z","name":"Our Presence Up There","trader":"Shani","previousQuestIds":["ss10w"],"nextQuestIds":["ss11b"]},{"id":"ss10v","name":"Out of the Shadows","trader":"Shani","previousQuestIds":["ss10r"],"nextQuestIds":[]},{"id":"paving_the_way","name":"Paving the Way","trader":"Apollo","previousQuestIds":["ss10x20"],"nextQuestIds":["deciphering_the_data"]},{"id":"ss1","name":"Picking Up The Pieces","trader":"Shani","previousQuestIds":["map_dam_battleground"],"nextQuestIds":["ss2","ss3"]},{"id":"ss10x10","name":"Power Out","trader":"Celeste","previousQuestIds":["ss10x9"],"nextQuestIds":["ss10x11"]},{"id":"ss10x9","name":"Prescriptions of the Past","trader":"Lance","previousQuestIds":["ss10x8"],"nextQuestIds":["ss10x10"]},{"id":"ss11a","name":"Reduced to Rubble","trader":"Shani","previousQuestIds":["ss11"],"nextQuestIds":["ss11bx"]},{"id":"ss8","name":"Safe Passage","trader":"Apollo","previousQuestIds":["ss5"],"nextQuestIds":["ss8a"]},{"id":"12_snap_and_salvage","name":"Snap and Salvage","trader":"Tian Wen","previousQuestIds":["12_cold_storage"],"nextQuestIds":[]},{"id":"ss10x6","name":"Source of the Contamination","trader":"Celeste","previousQuestIds":["ss10x4"],"nextQuestIds":["ss10x7"]},{"id":"ss8b","name":"Sparks Fly","trader":"Apollo","previousQuestIds":["ss8a"],"nextQuestIds":[]},{"id":"ss10j","name":"Straight Record","trader":"Celeste","previousQuestIds":["ss10h"],"nextQuestIds":["ss10o"]},{"id":"ss10x7","name":"Switching the Supply","trader":"Celeste","previousQuestIds":["ss10x6"],"nextQuestIds":["ss10x8"]},{"id":"the_clean_dream","name":"The Clean Dream","trader":"Apollo","previousQuestIds":["ss10x20"],"nextQuestIds":[]},{"id":"ss10u","name":"The Major's Footlocker","trader":"Tian Wen","previousQuestIds":["ss10r"],"nextQuestIds":[]},{"id":"ss7","name":"The Right Tool","trader":"Tian Wen","previousQuestIds":["ss5"],"nextQuestIds":["ss10"]},{"id":"ss10x3","name":"The Root of the Matter","trader":"Celeste","previousQuestIds":["ss10x2"],"nextQuestIds":["ss10x4"]},{"id":"the_stench_of_corruption","name":"The Stench of Corruption","trader":"Shani","previousQuestIds":["a_toxic_trail"],"nextQuestIds":[]},{"id":"ss9","name":"The Trifecta","trader":"Shani","previousQuestIds":["ss6"],"nextQuestIds":[]},{"id":"ss3","name":"Trash Into Treasure","trader":"Shani","previousQuestIds":["ss1"],"nextQuestIds":["ss4"]},{"id":"ss10x15","name":"Tribute to Toledo","trader":"Celeste","previousQuestIds":["ss10x14"],"nextQuestIds":["ss10x16"]},{"id":"ss10x17","name":"Turnabout","trader":"Celeste","previousQuestIds":["ss10x16"],"nextQuestIds":[]},{"id":"ss10q","name":"Unexpected Initiative","trader":"Tian Wen","previousQuestIds":["ss10p","ss10n"],"nextQuestIds":["ss10r"]},{"id":"ss10x2","name":"Untended Garden","trader":"Celeste","previousQuestIds":["ss10x"],"nextQuestIds":["ss10x3"]},{"id":"ss10x4","name":"Water Troubles","trader":"Celeste","previousQuestIds":["ss10x3","ss10y"],"nextQuestIds":["ss10x5","ss10x6"]},{"id":"ss8a","name":"What Goes Around","trader":"Apollo","previousQuestIds":["ss8"],"nextQuestIds":["ss8b"]},{"id":"ss10e","name":"What We Left Behind","trader":"Tian Wen","previousQuestIds":["ss10b"],"nextQuestIds":["ss10h"]},{"id":"ss11bx","name":"With a Trace","trader":"Shani","previousQuestIds":["ss11a"],"nextQuestIds":[]}];
+        const QUESTS = [{"id":"ss5","name":"A Bad Feeling","trader":"Celeste","previousQuestIds":["ss4"],"nextQuestIds":["ss5a","ss7","ss8"]},{"id":"ss10x","name":"A Balanced Harvest","trader":"Celeste","previousQuestIds":["ss10s"],"nextQuestIds":["ss10x2"]},{"id":"ss10","name":"A Better Use","trader":"Tian Wen","previousQuestIds":["ss7"],"nextQuestIds":["ss10a"]},{"id":"ss11","name":"A First Foothold","trader":"Shani","previousQuestIds":[],"nextQuestIds":["ss11a"]},{"id":"ss10k","name":"A Lay of the Land","trader":"Shani","previousQuestIds":["ss10g"],"nextQuestIds":["ss10s"]},{"id":"ss10x19","name":"A New Type of Plant","trader":"Lance","previousQuestIds":["ss10x18"],"nextQuestIds":["ss10x20"]},{"id":"ss10g","name":"A Reveal in Ruins","trader":"Lance","previousQuestIds":["ss10f"],"nextQuestIds":["ss10k"]},{"id":"ss10r","name":"A Symbol of Unification","trader":"Celeste","previousQuestIds":["ss10q"],"nextQuestIds":["ss10t","ss10u","ss10v"]},{"id":"a_toxic_trail","name":"A Toxic Trail","trader":"Shani","previousQuestIds":["ss10x20"],"nextQuestIds":["the_stench_of_corruption"]},{"id":"ss10x8","name":"A Warm Place to Rest","trader":"Apollo","previousQuestIds":["ss10x7"],"nextQuestIds":["ss10x9"]},{"id":"ss10y","name":"After Rain Comes","trader":"Celeste","previousQuestIds":["ss10s"],"nextQuestIds":["ss10x4"]},{"id":"ss10x20","name":"Armored Transports","trader":"Shani","previousQuestIds":["ss10x19","ss11bx"],"nextQuestIds":["a_toxic_trail","paving_the_way"]},{"id":"ss10w","name":"Back on Top","trader":"Tian Wen","previousQuestIds":["ss10t"],"nextQuestIds":["ss10z"]},{"id":"ss10x12","name":"Bees!","trader":"Celeste","previousQuestIds":["ss10x11"],"nextQuestIds":["ss10x13"]},{"id":"ss10h","name":"Broken Monument","trader":"Tian Wen","previousQuestIds":["ss10e"],"nextQuestIds":["ss10i","ss10j"]},{"id":"ss10x18","name":"Building a Library","trader":"Apollo","previousQuestIds":["ss10x16"],"nextQuestIds":["ss10x19"]},{"id":"ss10t","name":"Celeste's Journals","trader":"Celeste","previousQuestIds":["ss10r"],"nextQuestIds":["ss10w"]},{"id":"ss2","name":"Clearer Skies","trader":"Shani","previousQuestIds":["ss1"],"nextQuestIds":["ss4"]},{"id":"12_cold_storage","name":"Cold Storage","trader":"Celeste","previousQuestIds":["12_in_my_image"],"nextQuestIds":["12_snap_and_salvage"]},{"id":"ss11b2","name":"Communication Hideout","trader":"Shani","previousQuestIds":["ss11b"],"nextQuestIds":["ss10x5"]},{"id":"deciphering_the_data","name":"Deciphering the Data","trader":"Shani","previousQuestIds":["a_toxic_trail","paving_the_way"],"nextQuestIds":["groundbreaking"]},{"id":"ss10x16","name":"Digging Up Dirt","trader":"Celeste","previousQuestIds":["ss10x15"],"nextQuestIds":["ss10x17","ss10x18"]},{"id":"ss10c","name":"Doctor's Orders","trader":"Celeste","previousQuestIds":["ss10a"],"nextQuestIds":["ss10f"]},{"id":"ss10b","name":"Dormant Barons","trader":"Shani","previousQuestIds":["ss10a"],"nextQuestIds":["ss10d","ss10e"]},{"id":"ss6","name":"Down To Earth","trader":"Shani","previousQuestIds":["ss5a"],"nextQuestIds":["ss9"]},{"id":"ss10p","name":"Echoes of Victory Ridge","trader":"Celeste","previousQuestIds":["ss10o"],"nextQuestIds":["ss10q"]},{"id":"ss10x13","name":"Espresso","trader":"Apollo","previousQuestIds":["ss10x12"],"nextQuestIds":["ss10x14"]},{"id":"ss10s","name":"Eyes in the Sky","trader":"Shani","previousQuestIds":["ss10k"],"nextQuestIds":["ss10w","ss10x","ss10y"]},{"id":"ss10m","name":"Eyes on the Prize","trader":"Tian Wen","previousQuestIds":["ss10l"],"nextQuestIds":["ss10n"]},{"id":"ss10x11","name":"Flickering Threat","trader":"Celeste","previousQuestIds":["ss10x10"],"nextQuestIds":["ss10x12"]},{"id":"ss10a","name":"Greasing Her Palms","trader":"Celeste","previousQuestIds":["ss10"],"nextQuestIds":["ss10b","ss10c"]},{"id":"groundbreaking","name":"Groundbreaking","trader":"Apollo","previousQuestIds":["deciphering_the_data"],"nextQuestIds":[]},{"id":"ss5a","name":"Hatch Repairs","trader":"Shani","previousQuestIds":["ss5"],"nextQuestIds":["ss6"]},{"id":"12_in_my_image","name":"In My Image","trader":"Lance","previousQuestIds":[],"nextQuestIds":["12_cold_storage"]},{"id":"ss10n","name":"Industrial Espionage","trader":"Tian Wen","previousQuestIds":["ss10m"],"nextQuestIds":["ss10q"]},{"id":"ss10x5","name":"Into the Fray","trader":"Shani","previousQuestIds":["ss10x4","ss11b2"],"nextQuestIds":[]},{"id":"ss10o","name":"Keeping the Memory","trader":"Celeste","previousQuestIds":["ss10j"],"nextQuestIds":["ss10p"]},{"id":"ss10x14","name":"Life of a Pharmacist","trader":"Lance","previousQuestIds":["ss10x13"],"nextQuestIds":["ss10x15"]},{"id":"ss11b","name":"Lost in Transmission","trader":"Shani","previousQuestIds":["ss10z"],"nextQuestIds":["ss11b2"]},{"id":"ss10i","name":"Marked for Death","trader":"Tian Wen","previousQuestIds":["ss10h"],"nextQuestIds":["ss10l"]},{"id":"ss10l","name":"Market Correction","trader":"Tian Wen","previousQuestIds":["ss10i"],"nextQuestIds":["ss10m"]},{"id":"ss10f","name":"Medical Merchandise","trader":"Lance","previousQuestIds":["ss10c"],"nextQuestIds":["ss10g"]},{"id":"ss10d","name":"Mixed Signals","trader":"Tian Wen","previousQuestIds":["ss10b"],"nextQuestIds":[]},{"id":"ss4","name":"Off The Radar","trader":"Shani","previousQuestIds":["ss2","ss3"],"nextQuestIds":["ss5"]},{"id":"ss10z","name":"Our Presence Up There","trader":"Shani","previousQuestIds":["ss10w"],"nextQuestIds":["ss11b"]},{"id":"ss10v","name":"Out of the Shadows","trader":"Shani","previousQuestIds":["ss10r"],"nextQuestIds":[]},{"id":"paving_the_way","name":"Paving the Way","trader":"Apollo","previousQuestIds":["ss10x20"],"nextQuestIds":["deciphering_the_data"]},{"id":"ss1","name":"Picking Up The Pieces","trader":"Shani","previousQuestIds":[],"nextQuestIds":["ss2","ss3"]},{"id":"ss10x10","name":"Power Out","trader":"Celeste","previousQuestIds":["ss10x9"],"nextQuestIds":["ss10x11"]},{"id":"ss10x9","name":"Prescriptions of the Past","trader":"Lance","previousQuestIds":["ss10x8"],"nextQuestIds":["ss10x10"]},{"id":"ss11a","name":"Reduced to Rubble","trader":"Shani","previousQuestIds":["ss11"],"nextQuestIds":["ss11bx"]},{"id":"ss8","name":"Safe Passage","trader":"Apollo","previousQuestIds":["ss5"],"nextQuestIds":["ss8a"]},{"id":"12_snap_and_salvage","name":"Snap and Salvage","trader":"Tian Wen","previousQuestIds":["12_cold_storage"],"nextQuestIds":[]},{"id":"ss10x6","name":"Source of the Contamination","trader":"Celeste","previousQuestIds":["ss10x4"],"nextQuestIds":["ss10x7"]},{"id":"ss8b","name":"Sparks Fly","trader":"Apollo","previousQuestIds":["ss8a"],"nextQuestIds":[]},{"id":"ss10j","name":"Straight Record","trader":"Celeste","previousQuestIds":["ss10h"],"nextQuestIds":["ss10o"]},{"id":"ss10x7","name":"Switching the Supply","trader":"Celeste","previousQuestIds":["ss10x6"],"nextQuestIds":["ss10x8"]},{"id":"the_clean_dream","name":"The Clean Dream","trader":"Apollo","previousQuestIds":["ss11bx"],"nextQuestIds":[]},{"id":"ss10u","name":"The Major's Footlocker","trader":"Tian Wen","previousQuestIds":["ss10r"],"nextQuestIds":[]},{"id":"ss7","name":"The Right Tool","trader":"Tian Wen","previousQuestIds":["ss5"],"nextQuestIds":["ss10"]},{"id":"ss10x3","name":"The Root of the Matter","trader":"Celeste","previousQuestIds":["ss10x2"],"nextQuestIds":["ss10x4"]},{"id":"the_stench_of_corruption","name":"The Stench of Corruption","trader":"Shani","previousQuestIds":["a_toxic_trail"],"nextQuestIds":[]},{"id":"ss9","name":"The Trifecta","trader":"Shani","previousQuestIds":["ss6"],"nextQuestIds":[]},{"id":"ss3","name":"Trash Into Treasure","trader":"Shani","previousQuestIds":["ss1"],"nextQuestIds":["ss4"]},{"id":"ss10x15","name":"Tribute to Toledo","trader":"Celeste","previousQuestIds":["ss10x14"],"nextQuestIds":["ss10x16"]},{"id":"ss10x17","name":"Turnabout","trader":"Celeste","previousQuestIds":["ss10x16"],"nextQuestIds":[]},{"id":"ss10q","name":"Unexpected Initiative","trader":"Tian Wen","previousQuestIds":["ss10p","ss10n"],"nextQuestIds":["ss10r"]},{"id":"ss10x2","name":"Untended Garden","trader":"Celeste","previousQuestIds":["ss10x"],"nextQuestIds":["ss10x3"]},{"id":"ss10x4","name":"Water Troubles","trader":"Celeste","previousQuestIds":["ss10x3","ss10y"],"nextQuestIds":["ss10x5","ss10x6"]},{"id":"ss8a","name":"What Goes Around","trader":"Apollo","previousQuestIds":["ss8"],"nextQuestIds":["ss8b"]},{"id":"ss10e","name":"What We Left Behind","trader":"Tian Wen","previousQuestIds":["ss10b"],"nextQuestIds":["ss10h"]},{"id":"ss11bx","name":"With a Trace","trader":"Shani","previousQuestIds":["ss11a"],"nextQuestIds":["the_clean_dream"]}];
 
         let completedQuests = new Set();
         let questMap = new Map();
@@ -217,8 +281,8 @@
                     q.previousQuestIds.includes(questId) && completedQuests.has(q.id)
                 );
                 
-                if (dependents.length > 1) {
-                    if (!confirm(`Unmarking "${quest.name}" will also unmark ${dependents.length} dependent quests. Continue?`)) {
+                if (dependents.length > 0) {
+                    if (!confirm(`Unmarking "${quest.name}" will also unmark ${dependents.length} dependent quest${dependents.length > 1 ? 's' : ''}. Continue?`)) {
                         return;
                     }
                 }
@@ -326,10 +390,11 @@
             cy = cytoscape({
                 container: document.getElementById('quest-container'),
                 elements: elements,
-                userZoomingEnabled: true,
-                userPanningEnabled: true,
+                wheelSensitivity: 0.2,
                 boxSelectionEnabled: false,
                 autoungrabify: true,  // Disable node dragging
+                userZoomingEnabled: false,  // Disable default wheel zooming
+                userPanningEnabled: true,
                 style: [
                     {
                         selector: 'node',
@@ -471,6 +536,67 @@
                 }
             });
             
+            // Custom wheel handler: normal scroll = pan, shift+scroll = zoom
+            const container = cy.container();
+            container.addEventListener('wheel', function(e) {
+                // Ignore events on the zoom control
+                if (e.target.closest('#zoom-control')) {
+                    return;
+                }
+                
+                e.preventDefault();
+                e.stopPropagation();
+                
+                if (e.shiftKey) {
+                    // Shift + wheel = zoom (less sensitive for Magic Mouse/trackpad)
+                    const zoomDelta = e.deltaY > 0 ? 0.97 : 1.03;
+                    const newZoom = cy.zoom() * zoomDelta;
+                    const constrainedZoom = Math.max(minZoomLevel || 0.3, Math.min(2, newZoom));
+                    cy.zoom({
+                        level: constrainedZoom,
+                        renderedPosition: { x: e.offsetX, y: e.offsetY }
+                    });
+                    updateZoomSlider();
+                } else {
+                    // Normal wheel = pan (handle both vertical and horizontal scrolling)
+                    const pan = cy.pan();
+                    cy.pan({
+                        x: pan.x - e.deltaX,
+                        y: pan.y - e.deltaY
+                    });
+                }
+            }, { passive: false, capture: true });
+
+            // Zoom slider control
+            const zoomSlider = document.getElementById('zoom-slider');
+            const zoomValue = document.getElementById('zoom-value');
+            const zoomControl = document.getElementById('zoom-control');
+            
+            // Prevent all events on zoom control from reaching Cytoscape
+            ['mousedown', 'mouseup', 'click', 'dblclick', 'touchstart', 'touchend'].forEach(eventType => {
+                zoomControl.addEventListener(eventType, function(e) {
+                    e.stopPropagation();
+                }, true);
+            });
+            
+            zoomSlider.addEventListener('input', function() {
+                const zoom = parseFloat(this.value);
+                cy.zoom({
+                    level: zoom,
+                    renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 }
+                });
+                zoomValue.textContent = Math.round(zoom * 100) + '%';
+            });
+
+            // Update zoom slider when zoom changes
+            function updateZoomSlider() {
+                const zoom = cy.zoom();
+                zoomSlider.value = zoom;
+                zoomValue.textContent = Math.round(zoom * 100) + '%';
+            }
+
+            cy.on('zoom', updateZoomSlider);
+            
             // Constrain zoom to not go below fit level
             cy.on('zoom', function() {
                 if (minZoomLevel !== null && cy.zoom() < minZoomLevel) {
@@ -478,11 +604,14 @@
                 }
             });
             
-            // Calculate and store minimum zoom level after layout
+            // Calculate and store minimum zoom level after layout, set to readable zoom
             setTimeout(() => {
                 cy.fit(null, 30);
                 minZoomLevel = cy.zoom();
-                focusAvailable();
+                // Set initial zoom to 0.9 (90%) for readability
+                cy.zoom(0.9);
+                updateZoomSlider();
+                centerOnTopAvailable();
             }, 100);
         }
 
@@ -581,6 +710,38 @@
                     level: Math.min(cy.zoom(), 1.2),
                     renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 }
                 });
+            }
+        }
+
+        function centerOnTopAvailable() {
+            if (!cy) return;
+            
+            // Get available quest nodes
+            const availableNodes = cy.nodes().filter(node => {
+                const questId = node.id();
+                const quest = questMap.get(questId);
+                return quest && isQuestAvailable(quest) && !completedQuests.has(questId);
+            });
+            
+            if (availableNodes.length === 0) {
+                return;
+            }
+            
+            // Find the topmost available node (minimum y position)
+            let topNode = null;
+            let minY = Infinity;
+            
+            availableNodes.forEach(node => {
+                const pos = node.position();
+                if (pos.y < minY) {
+                    minY = pos.y;
+                    topNode = node;
+                }
+            });
+            
+            if (topNode) {
+                // Center on this node without changing zoom
+                cy.center(topNode);
             }
         }
 
