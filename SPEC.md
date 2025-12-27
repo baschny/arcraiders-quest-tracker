@@ -170,8 +170,6 @@ Quest data is sourced from the parent directory's `quests/*.json` files. Each qu
 
 **Progress Management**:
 - Reset All Progress: Clears all completed quests (with confirmation)
-- Export Progress: Downloads JSON file of completed quest IDs
-- Import Progress: Loads completion state from JSON file
 
 **View Controls**:
 - Focus Top Available: Centers on topmost available quest
@@ -364,16 +362,18 @@ jq -s 'map({id, name: .name.en, trader, previousQuestIds: (.previousQuestIds // 
 ## Known Limitations
 
 1. **No Multi-User Sync**: Progress is per-browser, not synced across devices
-2. **No Undo/Redo**: Quest toggling is immediate, no history tracking
-3. **No Search/Filter**: All quests always visible
-4. **No Quest Details**: Clicking opens wiki, no in-app detail view
-5. **Static Data**: Quest data must be manually updated from JSON files
-6. **No Mobile Optimization**: Usable but not optimized for small screens
-7. **Wiki Link Accuracy**: Name transformation may not match wiki URL structure for all quests
+2. **No Export/Import**: No built-in way to backup or transfer progress between browsers/devices
+3. **No Undo/Redo**: Quest toggling is immediate, no history tracking
+4. **No Search/Filter**: All quests always visible
+5. **No Quest Details**: Clicking opens wiki, no in-app detail view
+6. **Static Data**: Quest data must be manually updated from JSON files
+7. **No Mobile Optimization**: Usable but not optimized for small screens
+8. **Wiki Link Accuracy**: Name transformation may not match wiki URL structure for all quests
 
 ## Future Enhancement Possibilities
 
 **Potential Features** (not implemented):
+- Export/import progress functionality
 - Search/filter quests by name or trader
 - Show quest details in sidebar/modal
 - Highlight specific quest chains

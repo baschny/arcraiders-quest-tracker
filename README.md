@@ -12,7 +12,6 @@ An interactive web application to track your quest progress in ARC Raiders.
   - Completed quests appear faded
   - When unmarking a quest, dependent quests are also unmarked (with confirmation if multiple)
 - **Trader Color Coding**: Each trader has a distinct color for easy identification
-- **Export/Import**: Save your progress to a file or import from another device
 - **Statistics**: Track completed, available, and total quests
 
 ## Usage
@@ -30,8 +29,6 @@ Simply open `index.html` in your web browser. No server or installation required
 ### Managing Progress
 
 - **Reset All**: Click "Reset All Progress" to start over
-- **Export**: Download your progress as a JSON file
-- **Import**: Load previously exported progress from a file
 
 ### Visual Guide
 
@@ -66,5 +63,4 @@ The quest data is embedded directly in the HTML file and includes:
 ## Notes
 
 - Progress is stored per browser, so using a different browser or clearing browser data will reset your progress
-- Use the Export/Import feature to backup or transfer progress between devices
 - The application automatically handles quest chains - completing prerequisites unlocks subsequent quests

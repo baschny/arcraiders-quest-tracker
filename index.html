@@ -168,8 +168,6 @@
         <div class="controls">
             <div class="control-group">
                 <button onclick="resetProgress()">Reset All Progress</button>
-                <button onclick="exportProgress()">Export Progress</button>
-                <button onclick="importProgress()">Import Progress</button>
             </div>
             <div class="control-group">
                 <button onclick="centerOnTopAvailable()">Focus Top Available</button>
@@ -777,40 +775,6 @@
                 saveProgress();
                 updateGraph();
             }
-        }
-
-        function exportProgress() {
-            const data = JSON.stringify([...completedQuests]);
-            const blob = new Blob([data], {type: 'application/json'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'arcraiders-quest-progress.json';
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        function importProgress() {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'application/json';
-            input.onchange = (e) => {
-                const file = e.target.files[0];
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    try {
-                        const data = JSON.parse(event.target.result);
-                        completedQuests = new Set(data);
-                        saveProgress();
-                        updateGraph();
-                        alert('Progress imported successfully!');
-                    } catch (err) {
-                        alert('Error importing progress: ' + err.message);
-                    }
-                };
-                reader.readAsText(file);
-            };
-            input.click();
         }
 
         // Initialize
