@@ -21,9 +21,9 @@ jq -s 'map({
   hasBlueprint: ((.rewardItemIds // []) | map(.itemId) | any(test("_blueprint$")))
 }) | 
 map(
-  if .id == "ss1" then .previousQuestIds = ["map_dam_battleground"]
-  elif .id == "ss11" then .previousQuestIds = ["map_blue_gate"]
-  elif .id == "12_in_my_image" then .previousQuestIds = ["map_stella_montis"]
+  if .id == "ss1" then .previousQuestIds = ["map_dam_battleground"] + .previousQuestIds
+  elif .id == "ss11" then .previousQuestIds = ["map_blue_gate"] + .previousQuestIds
+  elif .id == "12_in_my_image" then .previousQuestIds = ["map_stella_montis"] + .previousQuestIds
   else .
   end
 ) | sort_by(.id)' "$QUESTS_DIR"/*.json > "$TEMP_FILE"
