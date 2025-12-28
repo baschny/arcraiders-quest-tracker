@@ -38,7 +38,8 @@
             border-radius: 8px;
             background: #2c2c2c;
             border: 2px solid #444;
-            min-width: 280px;
+            width: 280px;
+            max-width: 280px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             transition: all 0.2s ease;
         }
@@ -116,7 +117,7 @@
 
         .quest-node-header {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 12px;
             margin-bottom: 12px;
             padding-bottom: 10px;
@@ -124,14 +125,14 @@
         }
 
         .trader-icon {
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 18px;
+            font-size: 22px;
             color: white;
             flex-shrink: 0;
         }
@@ -145,25 +146,34 @@
 
         .quest-info {
             flex: 1;
-        }
-
-        .quest-id {
-            font-size: 11px;
-            color: #888;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            min-width: 0;
         }
 
         .quest-name {
-            font-size: 16px;
+            font-size: 18px;
             font-weight: bold;
             color: #e0e0e0;
-            margin-top: 4px;
-            line-height: 1.3;
+            line-height: 1.4;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
         .quest-node.completed .quest-name {
             color: #a8d5a8;
+        }
+
+        /* Highlight animation for focused nodes */
+        @keyframes highlightPulse {
+            0%, 100% {
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            }
+            50% {
+                box-shadow: 0 0 30px rgba(79, 195, 247, 0.8), 0 0 60px rgba(79, 195, 247, 0.4);
+            }
+        }
+
+        .quest-node.highlighted {
+            animation: highlightPulse 2s ease-in-out;
         }
 
         .quest-node-footer {
@@ -310,17 +320,116 @@
         .app-header {
             flex-shrink: 0;
             background: #2c2c2c;
-            padding: 16px 24px;
+            padding: 12px 24px;
             border-bottom: 2px solid #444;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
             text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .app-header h1 {
-            font-size: 20px;
+        .app-header img {
+            height: 40px;
+            width: auto;
+        }
+
+        /* Main content area */
+        .main-content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Available quests sidebar */
+        .available-sidebar {
+            width: 250px;
+            background: #2c2c2c;
+            border-right: 2px solid #444;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .available-sidebar-header {
+            padding: 12px 16px;
+            background: #1f1f1f;
+            border-bottom: 1px solid #444;
+            font-weight: bold;
             color: #4fc3f7;
-            text-shadow: 0 0 10px rgba(79, 195, 247, 0.5);
-            margin: 0;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+        }
+
+        .sidebar-search {
+            padding: 12px;
+            background: #1f1f1f;
+            border-bottom: 1px solid #444;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 8px 12px;
+            background: #2c2c2c;
+            border: 1px solid #444;
+            border-radius: 4px;
+            color: #e0e0e0;
+            font-size: 13px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: #4fc3f7;
+            background: #3c3c3c;
+            box-shadow: 0 0 0 2px rgba(79, 195, 247, 0.1);
+        }
+
+        .search-input::placeholder {
+            color: #666;
+        }
+
+        .available-quests-list {
+            overflow-y: auto;
+            padding: 8px;
+            max-height: 300px;
+        }
+
+        .search-results-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+        }
+
+        .available-quest-item {
+            padding: 10px 12px;
+            margin-bottom: 6px;
+            background: #3c3c3c;
+            border: 1px solid #555;
+            border-left: 3px solid #ffd700;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .available-quest-item:hover {
+            background: #4c4c4c;
+            border-color: #ffd700;
+            transform: translateX(2px);
+        }
+
+        .available-quest-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: #e0e0e0;
+            line-height: 1.3;
+        }
+
+        .no-available-quests {
+            padding: 20px;
+            text-align: center;
+            color: #888;
+            font-style: italic;
         }
 
         /* Graph container */
@@ -429,11 +538,11 @@
 
         // Custom Quest Node Component
         function QuestNode({ data }) {
-            const { quest, isCompleted, isAvailable, onToggle } = data;
+            const { quest, isCompleted, isAvailable, isHighlighted, onToggle } = data;
             const hasBlueprintReward = BLUEPRINT_QUESTS.has(quest.id);
             
             const traderClass = `trader-${quest.trader.toLowerCase().replace(' ', '')}`;
-            const nodeClass = `quest-node ${isCompleted ? 'completed' : ''} ${isAvailable ? 'available' : ''}`;
+            const nodeClass = `quest-node ${isCompleted ? 'completed' : ''} ${isAvailable ? 'available' : ''} ${isHighlighted ? 'highlighted' : ''}`;
 
             const getTraderInitial = (trader) => {
                 return trader.split(' ').map(w => w[0]).join('');
@@ -453,7 +562,6 @@
                             {getTraderInitial(quest.trader)}
                         </div>
                         <div className="quest-info">
-                            <div className="quest-id">{quest.id}</div>
                             <div className="quest-name">{quest.name}</div>
                         </div>
                     </div>
@@ -500,6 +608,8 @@
             };
 
             const [completedQuests, setCompletedQuests] = useState(loadCompletedQuests);
+            const [searchQuery, setSearchQuery] = useState('');
+            const [highlightedQuestId, setHighlightedQuestId] = useState(null);
             
             // Save to localStorage whenever completedQuests changes
             React.useEffect(() => {
@@ -676,6 +786,7 @@
                             quest,
                             isCompleted: completedQuests.has(quest.id),
                             isAvailable: isQuestAvailable(quest),
+                            isHighlighted: quest.id === highlightedQuestId,
                             onToggle: toggleQuest
                         },
                         draggable: false
@@ -718,11 +829,12 @@
                 });
 
                 return { nodes: flowNodes, edges: flowEdges };
-            }, [completedQuests, isQuestAvailable, toggleQuest]);
+            }, [completedQuests, isQuestAvailable, toggleQuest, highlightedQuestId]);
 
             // Initialize state hooks with the computed nodes and edges
             const [flowNodes, setNodes, onNodesChange] = useNodesState(nodes);
             const [flowEdges, setEdges, onEdgesChange] = useEdgesState(edges);
+            const [reactFlowInstance, setReactFlowInstance] = React.useState(null);
 
             // Update nodes and edges when completedQuests changes
             React.useEffect(() => {
@@ -735,13 +847,56 @@
 
             // Filter out map nodes for statistics
             const actualQuests = QUESTS.filter(q => q.trader !== 'Map');
-            const availableCount = actualQuests.filter(q => isQuestAvailable(q)).length;
+            const availableQuests = actualQuests.filter(q => isQuestAvailable(q));
+            const availableCount = availableQuests.length;
             const completedCount = actualQuests.filter(q => completedQuests.has(q.id)).length;
+            
+            // Filter quests by search query
+            const searchResults = useMemo(() => {
+                if (!searchQuery.trim()) return [];
+                const query = searchQuery.toLowerCase();
+                return actualQuests.filter(q => 
+                    q.name.toLowerCase().includes(query)
+                );
+            }, [searchQuery, actualQuests]);
 
             // Handle node clicks
             const onNodeClick = useCallback((event, node) => {
                 node.data.onToggle(node.id);
             }, []);
+            
+            // Focus on a specific quest
+            const focusOnQuest = useCallback((questId) => {
+                if (!reactFlowInstance) return;
+                
+                const node = flowNodes.find(n => n.id === questId);
+                if (node) {
+                    reactFlowInstance.setCenter(node.position.x + 150, node.position.y + 70, {
+                        zoom: 1.0,
+                        duration: 800
+                    });
+                    
+                    // Highlight the quest
+                    setHighlightedQuestId(questId);
+                    
+                    // Remove highlight after animation completes
+                    setTimeout(() => {
+                        setHighlightedQuestId(null);
+                    }, 2000);
+                }
+            }, [reactFlowInstance, flowNodes]);
+            
+            // Handle search input
+            const handleSearchChange = useCallback((e) => {
+                setSearchQuery(e.target.value);
+            }, []);
+            
+            // Handle search enter key
+            const handleSearchKeyDown = useCallback((e) => {
+                if (e.key === 'Enter' && searchResults.length > 0) {
+                    focusOnQuest(searchResults[0].id);
+                }
+            }, [searchResults, focusOnQuest]);
 
             // Calculate bounds for translateExtent
             const bounds = useMemo(() => {
@@ -766,35 +921,99 @@
             return (
                 <>
                     <div className="app-header">
-                        <h1>🎮 ARC Raiders Quest Tracker</h1>
+                        <img src="images/arc-raiders.svg" alt="ARC Raiders Quest Tracker" />
                     </div>
 
-                    <div className="graph-container">
-                        <ReactFlow
-                            nodes={flowNodes}
-                            edges={flowEdges}
-                            onNodesChange={onNodesChange}
-                            onEdgesChange={onEdgesChange}
-                            onNodeClick={onNodeClick}
-                            nodeTypes={nodeTypes}
-                            defaultEdgeOptions={{
-                                type: 'default',
-                                markerEnd: { type: MarkerType.ArrowClosed },
-                                style: { strokeWidth: 2 }
-                            }}
-                            translateExtent={bounds}
-                            fitView
-                            minZoom={0.3}
-                            maxZoom={1.5}
-                            defaultViewport={{ x: 0, y: 0, zoom: 0.5 }}
-                            nodesDraggable={false}
-                            nodesConnectable={false}
-                        >
-                            <Controls />
-                            <Background color="#2c2c2c" gap={16} />
-                        </ReactFlow>
+                    <div className="main-content">
+                        <div className="available-sidebar">
+                            <div className="available-sidebar-header">
+                                ⭐ Available Quests ({availableCount})
+                            </div>
+                            <div className="available-quests-list">
+                                {availableQuests.length === 0 ? (
+                                    <div className="no-available-quests">
+                                        No quests available.
+                                        Complete prerequisites first.
+                                    </div>
+                                ) : (
+                                    availableQuests.map(quest => (
+                                        <div 
+                                            key={quest.id}
+                                            className="available-quest-item"
+                                            onClick={() => focusOnQuest(quest.id)}
+                                            title="Click to focus on this quest"
+                                        >
+                                            <div className="available-quest-name">{quest.name}</div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                            
+                            <div className="sidebar-search">
+                                <input 
+                                    type="text"
+                                    className="search-input"
+                                    placeholder="🔍 Search all quests..."
+                                    value={searchQuery}
+                                    onChange={handleSearchChange}
+                                    onKeyDown={handleSearchKeyDown}
+                                />
+                            </div>
+                            
+                            {searchQuery.trim() && (
+                                <>
+                                    <div className="available-sidebar-header">
+                                        🔍 Search Results ({searchResults.length})
+                                    </div>
+                                    <div className="search-results-list">
+                                        {searchResults.length === 0 ? (
+                                            <div className="no-available-quests">
+                                                No quests found matching "{searchQuery}"
+                                            </div>
+                                        ) : (
+                                            searchResults.map(quest => (
+                                                <div 
+                                                    key={quest.id}
+                                                    className="available-quest-item"
+                                                    onClick={() => focusOnQuest(quest.id)}
+                                                    title="Click to focus on this quest"
+                                                >
+                                                    <div className="available-quest-name">{quest.name}</div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </>
+                            )}
+                        </div>
 
-                        <div className="stats">
+                        <div className="graph-container">
+                            <ReactFlow
+                                nodes={flowNodes}
+                                edges={flowEdges}
+                                onNodesChange={onNodesChange}
+                                onEdgesChange={onEdgesChange}
+                                onNodeClick={onNodeClick}
+                                onInit={setReactFlowInstance}
+                                nodeTypes={nodeTypes}
+                                defaultEdgeOptions={{
+                                    type: 'default',
+                                    markerEnd: { type: MarkerType.ArrowClosed },
+                                    style: { strokeWidth: 2 }
+                                }}
+                                translateExtent={bounds}
+                                fitView
+                                minZoom={0.3}
+                                maxZoom={1.5}
+                                defaultViewport={{ x: 0, y: 0, zoom: 0.5 }}
+                                nodesDraggable={false}
+                                nodesConnectable={false}
+                            >
+                                <Controls />
+                                <Background color="#2c2c2c" gap={16} />
+                            </ReactFlow>
+
+                            <div className="stats">
                             <div className="stat-item">
                                 <div className="stat-value">{completedCount}</div>
                                 <div className="stat-label">Completed</div>
@@ -803,10 +1022,11 @@
                                 <div className="stat-value">{availableCount}</div>
                                 <div className="stat-label">Available</div>
                             </div>
-                        <div className="stat-item">
-                            <div className="stat-value">{actualQuests.length}</div>
-                            <div className="stat-label">Total</div>
-                        </div>
+                            <div className="stat-item">
+                                <div className="stat-value">{actualQuests.length}</div>
+                                <div className="stat-label">Total</div>
+                            </div>
+                            </div>
                         </div>
                     </div>
                 </>
