@@ -60,6 +60,17 @@ The quest data is embedded directly in the HTML file and includes:
 - **Responsive design**: Works on desktop and mobile browsers
 - **No network required**: Works completely offline
 
+## Updating Quest Data
+
+For maintainers: To regenerate quest data from the source JSON files:
+
+```bash
+cd quest-tracker
+./generate-quest-data.sh
+```
+
+This extracts quest data from `../quests/*.json` and generates `quests-data.json` with blueprint detection. See `AGENTS.md` for complete update instructions.
+
 ## Notes
 
 - Progress is stored per browser, so using a different browser or clearing browser data will reset your progress

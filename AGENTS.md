@@ -17,60 +17,54 @@ Quest data comes from the parent directory's `quests/*.json` files. Each quest h
 
 ## Updating Quest Data
 
-### Step 1: Extract Fresh Data from JSON Files
+### Automated Process (Recommended)
 
-From the parent directory, run:
+Run the generation script from the quest-tracker directory:
 
 ```bash
-cd /Users/ernst/Develop/Games/ArcRaiders/arcraiders-data
-jq -s 'map({id, name: .name.en, trader, previousQuestIds: (.previousQuestIds // []), nextQuestIds: (.nextQuestIds // [])})' quests/*.json | jq -c .
+cd /Users/ernst/Develop/Games/ArcRaiders/arcraiders-data/quest-tracker
+./generate-quest-data.sh
 ```
 
-This outputs a compact JSON array of all quests with only the required fields.
+This script:
+1. Extracts quest data from `../quests/*.json` files
+2. Detects blueprint rewards (items ending with `_blueprint`)
+3. Generates `quests-data.json` with structured quest data
+4. Reports statistics: total quests, blueprint count, and blueprint quest IDs
 
-### Step 2: Update index.html with Fresh Data
+Output includes:
+- Quest metadata: `id`, `name`, `trader`, `previousQuestIds`, `nextQuestIds`
+- `hasBlueprint`: boolean flag (true if quest rewards any item ending with `_blueprint`)
 
-Create a Node.js script to update the quest data:
+### Manual Update to index.html
 
-```javascript
-const fs = require('fs');
-const html = fs.readFileSync('quest-tracker/index.html', 'utf8');
+After generating `quests-data.json`, update the React Flow application:
 
-// Paste the JSON output from Step 1 here
-const quests = [/* JSON from jq command */];
+1. **Update QUESTS array**: Copy the content of `quests-data.json` and replace the `const QUESTS = [...]` array in `index.html` (around line 615)
 
-// Add map prerequisite nodes (not part of arctracker data)
-const maps = [
-  {id:'map_dam_battleground', name:'🗺️ Dam Battleground', trader:'Map', previousQuestIds:[], nextQuestIds:['ss1']},
-  {id:'map_blue_gate', name:'🗺️ Blue Gate', trader:'Map', previousQuestIds:[], nextQuestIds:['ss11']},
-  {id:'map_stella_montis', name:'🗺️ Stella Montis', trader:'Map', previousQuestIds:[], nextQuestIds:['12_in_my_image']}
-];
+2. **Update BLUEPRINT_QUESTS Set**: Update the Set with the blueprint quest IDs shown in the script output:
+   ```javascript
+   const BLUEPRINT_QUESTS = new Set(['ss10a', 'ss10n', 'ss10u', 'ss8b']);
+   ```
 
-// Update quest dependencies for map prerequisites
-quests.forEach(q => {
-  if (q.id === 'ss1') q.previousQuestIds = ['map_dam_battleground'];
-  if (q.id === 'ss11') q.previousQuestIds = ['map_blue_gate'];
-  if (q.id === '12_in_my_image') q.previousQuestIds = ['map_stella_montis'];
-});
+3. **Add map prerequisite nodes**: Map nodes are custom prerequisites (not from JSON data) added directly in `index.html`:
+   ```javascript
+   const MAP_NODES = [
+     {id: 'map_dam_battleground', name: 'Dam Battleground', trader: 'Map', previousQuestIds: [], nextQuestIds: ['ss1']},
+     {id: 'map_blue_gate', name: 'Blue Gate', trader: 'Map', previousQuestIds: [], nextQuestIds: ['ss11']},
+     {id: 'map_stella_montis', name: 'Stella Montis', trader: 'Map', previousQuestIds: [], nextQuestIds: ['12_in_my_image']}
+   ];
+   ```
 
-const allQuests = [...quests];
-
-// Update QUEST_DATA array in index.html
-const questDataRegex = /const QUEST_DATA = \[.*?\];/s;
-const newHtml = html.replace(questDataRegex, 'const QUEST_DATA = ' + JSON.stringify(allQuests) + ';');
-fs.writeFileSync('quest-tracker/index.html', newHtml);
-console.log('Updated quest data successfully');
-```
-
-Save this as `/tmp/update_quests.js` and run: `node /tmp/update_quests.js`
-
-### Step 3: Verify the Update
+### Verification
 
 Open `index.html` in a browser and verify:
-1. All quests are displayed
-2. Map nodes appear at the top with different styling (smaller, darker)
-3. Dependencies are correct
-4. Quest chains flow properly
+1. All 72 quests are displayed with correct dependencies
+2. Map prerequisite nodes appear with distinct styling (dark blue gradient, map images)
+3. Blueprint badges (BP icon) appear on the 4 blueprint quests
+4. Quest chains and dependencies flow correctly
+5. Available quests sidebar shows unlocked quests
+6. Search functionality works
 
 ## Map Nodes
 
@@ -81,46 +75,43 @@ Map nodes are custom prerequisite nodes (not from arctracker data) that represen
 - **map_stella_montis**: Required for "In My Image" (12_in_my_image)
 
 Map nodes have distinct styling:
-- Smaller size (200x60 vs 250x80)
-- Darker background (#1a1a1a)
-- Gray border (#455a64, 3px)
-- Bold font
-- 🗺️ emoji prefix
+- Size: 300x110px (vs quest nodes at 300x140px)
+- Dark blue gradient background (#263238 to #37474f)
+- No trader icon (displays map preview image instead)
+- Map images: `images/Dam_Battlegrounds.png.webp`, `images/Blue_Gate.png.webp`, `images/Stella_Montis.png.webp`
+- Transparent 2px borders to maintain alignment with quest nodes
 
 ## Key Configuration
 
-### Quest Priorities
-
-In `initGraph()`, quest priorities control horizontal positioning (lower = further left):
-
-```javascript
-const questPriorities = {
-    // Map nodes at the very top/left
-    'map_dam_battleground': -2000,
-    'map_blue_gate': -2000,
-    'map_stella_montis': -2000,
-    // Far left: A First Foothold chain
-    'ss11': -1000,
-    'ss11a': -1000,
-    'ss11bx': -1000,
-    // Also prioritize ss10x20 which connects to ss11bx
-    'ss10x20': -900,
-};
-```
-
 ### Dagre Layout Settings
 
+In the `getLayoutedElements()` function:
+
 ```javascript
-layout: {
-    name: 'dagre',
-    rankDir: 'TB',  // Top to bottom
-    nodeSep: 80,    // Horizontal space between nodes
-    rankSep: 100,   // Vertical space between tiers
-    padding: 30,
-    ranker: 'network-simplex',  // Layout algorithm
-    align: 'UL',    // Align nodes to upper-left
-}
+dagreGraph.setGraph({ 
+  rankdir: 'TB',   // Top to bottom
+  nodesep: 50,     // Horizontal space between nodes
+  ranksep: 70      // Vertical space between tiers
+});
 ```
+
+### React Flow Settings
+
+```javascript
+<ReactFlow
+  nodes={nodes}
+  edges={edges}
+  nodeTypes={nodeTypes}
+  fitView
+  minZoom={0.3}
+  maxZoom={1.5}
+  defaultViewport={{ x: 0, y: 0, zoom: 0.5 }}
+/>
+```
+
+### localStorage Keys
+
+- `arcraiders-quest-progress-reactflow`: Stores completed quest IDs as JSON array
 
 ## Trader Colors
 
@@ -135,50 +126,111 @@ Defined in `getTraderColor()`:
 ## Features
 
 - **Visual States**:
-  - Available quests: Gold border (#ffd700)
-  - Completed quests: Green background (#1b4d2b) and border (#2e7d4e)
-  - Locked quests: Default gray styling
+  - Available quests: Gold/yellow border (#ffc107, 3px solid)
+  - Completed quests: Green checkmark badge, green border (#4caf50)
+  - Locked quests: Default styling with gray borders
+  - Highlighted quests: Cyan glow pulse animation (2 seconds)
   
 - **Progress Tracking**:
-  - Saved to localStorage (`arcraiders-quest-progress`)
-  - Auto-complete prerequisites when marking a quest complete
-  - Auto-uncomplete dependents when unmarking a quest
+  - Saved to localStorage (`arcraiders-quest-progress-reactflow`)
+  - Smart completion: auto-complete prerequisites with confirmation dialog
+  - Smart uncomplete: auto-uncomplete dependents with confirmation dialog
+  - Statistics display: X/72 quests completed
   
-- **Zoom Controls**:
-  - Focus on available quests (shows context)
-  - Zoom in/out
-  - Fit all
-  - Minimum zoom constraint (can't zoom out past fit level)
-
-- **Wiki Links**: Right-click nodes to open quest wiki page
+- **Blueprint Rewards**:
+  - Blueprint badge (BP icon) displays on quests that reward blueprint items
+  - Dark blue background with grid overlay pattern
+  - Tooltip: "Rewards a Blueprint"
+  
+- **Sidebar - Available Quests**:
+  - Shows all currently available quests (prerequisites met, not completed)
+  - Click to center and zoom to quest (zoom: 1.0)
+  - Quest count displayed in header
+  
+- **Sidebar - Search**:
+  - Real-time search filtering by quest name
+  - Click result to center and zoom to quest
+  - Press Enter to jump to first result
+  - Found quests briefly highlight with cyan glow
+  
+- **Tooltips**:
+  - Trader icon: Shows full trader name
+  - Blueprint badge: "Rewards a Blueprint"
+  - Wiki button: "Open in ARC Raiders Wiki (new tab)"
+  
+- **External Links**:
+  - Wiki button opens quest page on arcraiders.wiki in new tab
 
 ## Common Tasks
 
+### Adding a New Quest
+
+1. Add the quest JSON file to `../quests/` directory
+2. Run `./generate-quest-data.sh` to regenerate `quests-data.json`
+3. Copy the new quest data into the `QUESTS` array in `index.html`
+4. If the quest rewards a blueprint item, add its ID to the `BLUEPRINT_QUESTS` Set
+5. Verify the quest appears with correct dependencies
+
 ### Adding a New Map Node
 
-1. Add to the `maps` array in the update script
-2. Update the corresponding quest's `previousQuestIds`
-3. Add priority in `questPriorities` (use -2000 for maps)
-4. Update `getTraderColor()` if using a new trader type
+1. Add the map image to `images/` directory (e.g., `New_Map.png.webp`)
+2. Add the map node to the `MAP_NODES` array in `index.html`:
+   ```javascript
+   {id: 'map_new_map', name: 'New Map', trader: 'Map', previousQuestIds: [], nextQuestIds: ['first_quest_id']}
+   ```
+3. Update the corresponding starting quest's `previousQuestIds` to reference the map node
+4. Map nodes should have no prerequisites and point to one or more starting quests
 
 ### Changing Quest Dependencies
 
-Modify the quest data in Step 2 of the update process, ensuring both `previousQuestIds` and `nextQuestIds` are bidirectionally consistent.
+1. Update the quest JSON file in `../quests/` directory
+2. Ensure both `previousQuestIds` and `nextQuestIds` are bidirectionally consistent
+3. Regenerate `quests-data.json` using the script
+4. Update `index.html` with the new data
 
 ### Adjusting Visual Layout
 
-Modify quest priorities or Dagre layout settings to control node positioning. Lower priorities move nodes left, higher `rankSep` increases vertical spacing.
+Modify Dagre layout settings in `getLayoutedElements()`:
+- `nodesep`: Horizontal spacing between nodes (default: 50)
+- `ranksep`: Vertical spacing between tiers (default: 70)
+- `rankdir`: Direction of flow ('TB' for top-to-bottom, 'LR' for left-to-right)
+
+### Adding a New Trader
+
+1. Add trader color to `getTraderColor()` function
+2. Add trader icon/initial to trader icon rendering logic
+3. Update trader name tooltips
 
 ## Files
 
-- `index.html`: Main application (single file, self-contained)
+- `index.html`: Main application (React Flow with embedded quest data)
+- `generate-quest-data.sh`: Script to regenerate quest data from JSON files
+- `quests-data.json`: Generated quest data (with `hasBlueprint` flags)
+- `images/`: Map preview images (Dam_Battlegrounds.png.webp, Blue_Gate.png.webp, Stella_Montis.png.webp)
 - `README.md`: User documentation
+- `SPEC.md`: Functional specification
 - `AGENTS.md`: This file (maintenance guide for AI agents)
-- `index.html.backup`: Backup of previous version (created during updates)
+- `index.html.cytoscape.backup`: Backup of old Cytoscape.js implementation
+
+## Data Flow
+
+```
+../quests/*.json (source files)
+       ↓
+./generate-quest-data.sh (extraction script)
+       ↓
+./quests-data.json (generated data with hasBlueprint flags)
+       ↓
+[Manual copy/paste]
+       ↓
+./index.html (QUESTS array and BLUEPRINT_QUESTS Set)
+```
 
 ## Notes
 
-- Map nodes must be added AFTER loading quest data from JSON files
-- Map nodes are not part of the arctraiders-data repository
+- Map nodes are custom prerequisites (not from arctraiders-data JSON files)
+- Map nodes must be added manually to `MAP_NODES` array in `index.html`
 - Always verify quest dependencies are bidirectional (if A→B, then B should list A in previousQuestIds)
-- The application is completely client-side with no external dependencies at runtime
+- The application is completely client-side with no external dependencies at runtime (uses CDN for React/React Flow)
+- Blueprint detection: Any quest with a reward item ending in `_blueprint` is flagged
+- Quest IDs exclude map nodes (72 actual quests, 3 map nodes = 75 total nodes)
