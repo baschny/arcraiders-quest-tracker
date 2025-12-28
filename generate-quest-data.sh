@@ -19,7 +19,14 @@ jq -s 'map({
   previousQuestIds: (.previousQuestIds // []), 
   nextQuestIds: (.nextQuestIds // []), 
   hasBlueprint: ((.rewardItemIds // []) | map(.itemId) | any(test("_blueprint$")))
-}) | sort_by(.id)' "$QUESTS_DIR"/*.json > "$TEMP_FILE"
+}) | 
+map(
+  if .id == "ss1" then .previousQuestIds = ["map_dam_battleground"]
+  elif .id == "ss11" then .previousQuestIds = ["map_blue_gate"]
+  elif .id == "12_in_my_image" then .previousQuestIds = ["map_stella_montis"]
+  else .
+  end
+) | sort_by(.id)' "$QUESTS_DIR"/*.json > "$TEMP_FILE"
 
 QUEST_COUNT=$(jq 'length' "$TEMP_FILE")
 BLUEPRINT_COUNT=$(jq 'map(select(.hasBlueprint)) | length' "$TEMP_FILE")
