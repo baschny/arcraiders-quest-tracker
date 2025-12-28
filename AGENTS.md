@@ -29,36 +29,21 @@ cd /Users/ernst/Develop/Games/ArcRaiders/arcraiders-data/quest-tracker
 This script:
 1. Extracts quest data from `../quests/*.json` files
 2. Detects blueprint rewards (items ending with `_blueprint`)
-3. Generates `quests-data.json` with structured quest data
-4. Reports statistics: total quests, blueprint count, and blueprint quest IDs
+3. Compacts the JSON data
+4. **Automatically injects** the data into `index.html` by replacing the `const QUEST_DATA = [...]` line
+5. Reports statistics: total quests, blueprint count, and blueprint quest IDs
 
-Output includes:
-- Quest metadata: `id`, `name`, `trader`, `previousQuestIds`, `nextQuestIds`
-- `hasBlueprint`: boolean flag (true if quest rewards any item ending with `_blueprint`)
-
-### Manual Update to index.html
-
-After generating `quests-data.json`, update the React Flow application:
-
-1. **Update QUESTS array**: Copy the content of `quests-data.json` and replace the `const QUESTS = [...]` array in `index.html` (around line 615)
-
-2. **Update BLUEPRINT_QUESTS Set**: Update the Set with the blueprint quest IDs shown in the script output:
-   ```javascript
-   const BLUEPRINT_QUESTS = new Set(['ss10a', 'ss10n', 'ss10u', 'ss8b']);
-   ```
-
-3. **Add map prerequisite nodes**: Map nodes are custom prerequisites (not from JSON data) added directly in `index.html`:
-   ```javascript
-   const MAP_NODES = [
-     {id: 'map_dam_battleground', name: 'Dam Battleground', trader: 'Map', previousQuestIds: [], nextQuestIds: ['ss1']},
-     {id: 'map_blue_gate', name: 'Blue Gate', trader: 'Map', previousQuestIds: [], nextQuestIds: ['ss11']},
-     {id: 'map_stella_montis', name: 'Stella Montis', trader: 'Map', previousQuestIds: [], nextQuestIds: ['12_in_my_image']}
-   ];
-   ```
+The script uses `sed` to directly update the HTML file, so no manual copying is required. This keeps the application as a single self-contained HTML file without needing external JSON files or a web server for local testing.
 
 ### Verification
 
-Open `index.html` in a browser and verify:
+Start the local web server and verify:
+
+```bash
+./serve.sh
+```
+
+Then open http://localhost:8080 and verify:
 1. All 72 quests are displayed with correct dependencies
 2. Map prerequisite nodes appear with distinct styling (dark blue gradient, map images)
 3. Blueprint badges (BP icon) appear on the 4 blueprint quests
@@ -166,10 +151,9 @@ Defined in `getTraderColor()`:
 ### Adding a New Quest
 
 1. Add the quest JSON file to `../quests/` directory
-2. Run `./generate-quest-data.sh` to regenerate `quests-data.json`
-3. Copy the new quest data into the `QUESTS` array in `index.html`
-4. If the quest rewards a blueprint item, add its ID to the `BLUEPRINT_QUESTS` Set
-5. Verify the quest appears with correct dependencies
+2. Run `./generate-quest-data.sh` to inject the data into `index.html`
+3. Refresh the browser - the new quest will appear automatically
+4. Verify the quest appears with correct dependencies and blueprint badge (if applicable)
 
 ### Adding a New Map Node
 
@@ -185,8 +169,8 @@ Defined in `getTraderColor()`:
 
 1. Update the quest JSON file in `../quests/` directory
 2. Ensure both `previousQuestIds` and `nextQuestIds` are bidirectionally consistent
-3. Regenerate `quests-data.json` using the script
-4. Update `index.html` with the new data
+3. Run `./generate-quest-data.sh` to inject the updated data into `index.html`
+4. Refresh the browser to see the changes
 
 ### Adjusting Visual Layout
 
