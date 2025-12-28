@@ -208,6 +208,37 @@
             border-color: #777;
         }
 
+        .blueprint-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 4px,
+                    rgba(100, 150, 200, 0.15) 4px,
+                    rgba(100, 150, 200, 0.15) 5px
+                ),
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 4px,
+                    rgba(100, 150, 200, 0.15) 4px,
+                    rgba(100, 150, 200, 0.15) 5px
+                ),
+                linear-gradient(135deg, #1a3a52, #0d2738);
+            border: 1px solid #2d5a7b;
+            border-radius: 3px;
+            padding: 3px 6px;
+            font-size: 9px;
+            font-weight: bold;
+            color: #7cb3e0;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(100, 150, 200, 0.1);
+            letter-spacing: 0.5px;
+        }
+
         /* React Flow Controls */
         .react-flow__controls {
             background: #2c2c2c;
@@ -359,6 +390,9 @@
 
         // Combine maps and quests
         const QUESTS = [...MAP_NODES, ...QUEST_DATA];
+        
+        // Quests that reward blueprints
+        const BLUEPRINT_QUESTS = new Set(['ss10a', 'ss10n', 'ss8b', 'ss10u']);
 
         // Map image mapping
         const MAP_IMAGES = {
@@ -396,6 +430,7 @@
         // Custom Quest Node Component
         function QuestNode({ data }) {
             const { quest, isCompleted, isAvailable, onToggle } = data;
+            const hasBlueprintReward = BLUEPRINT_QUESTS.has(quest.id);
             
             const traderClass = `trader-${quest.trader.toLowerCase().replace(' ', '')}`;
             const nodeClass = `quest-node ${isCompleted ? 'completed' : ''} ${isAvailable ? 'available' : ''}`;
@@ -412,8 +447,9 @@
             return (
                 <div className={nodeClass} onClick={handleClick}>
                     <Handle type="target" position={Position.Top} />
+                    {hasBlueprintReward && <div className="blueprint-badge" title="Rewards a Blueprint">📜 BP</div>}
                     <div className="quest-node-header">
-                        <div className={`trader-icon ${traderClass}`}>
+                        <div className={`trader-icon ${traderClass}`} title={quest.trader}>
                             {getTraderInitial(quest.trader)}
                         </div>
                         <div className="quest-info">
@@ -437,6 +473,7 @@
                                 target="_blank"
                                 className="quest-action-btn"
                                 onClick={(e) => e.stopPropagation()}
+                                title="Open in ARC Raiders Wiki (new tab)"
                             >
                                 📖 Wiki
                             </a>
