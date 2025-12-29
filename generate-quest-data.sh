@@ -16,6 +16,7 @@ jq -s 'map({
   id, 
   name: .name.en, 
   trader, 
+  map: (.map // []),
   previousQuestIds: (.previousQuestIds // []), 
   nextQuestIds: (.nextQuestIds // []), 
   hasBlueprint: ((.rewardItemIds // []) | map(.itemId) | any(test("_blueprint$")))
