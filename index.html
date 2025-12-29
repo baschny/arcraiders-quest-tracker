@@ -135,6 +135,8 @@
             font-size: 22px;
             color: white;
             flex-shrink: 0;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .trader-celeste { background: linear-gradient(135deg, #7b1fa2, #9c27b0); }
@@ -520,6 +522,15 @@
             'map_stella_montis': 'images/Stella_Montis.png.webp'
         };
 
+        // Trader image mapping
+        const TRADER_IMAGES = {
+            'Celeste': 'images/trader/celeste.png',
+            'Shani': 'images/trader/shani.png',
+            'Lance': 'images/trader/lance.png',
+            'Tian Wen': 'images/trader/tian_wen.png',
+            'Apollo': 'images/trader/apollo.png'
+        };
+
         // Custom Map Node Component
         function MapNode({ data }) {
             const { quest, isCompleted, onToggle } = data;
@@ -553,10 +564,7 @@
             
             const traderClass = `trader-${quest.trader.toLowerCase().replace(' ', '')}`;
             const nodeClass = `quest-node ${isCompleted ? 'completed' : ''} ${isAvailable ? 'available' : ''} ${isHighlighted ? 'highlighted' : ''}`;
-
-            const getTraderInitial = (trader) => {
-                return trader.split(' ').map(w => w[0]).join('');
-            };
+            const traderImage = TRADER_IMAGES[quest.trader];
 
             const handleClick = (e) => {
                 e.stopPropagation();
@@ -569,7 +577,11 @@
                     {hasBlueprintReward && <div className="blueprint-badge" title="Rewards a Blueprint">📜 BP</div>}
                     <div className="quest-node-header">
                         <div className={`trader-icon ${traderClass}`} title={quest.trader}>
-                            {getTraderInitial(quest.trader)}
+                            {traderImage ? (
+                                <img src={traderImage} alt={quest.trader} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                            ) : (
+                                quest.trader.split(' ').map(w => w[0]).join('')
+                            )}
                         </div>
                         <div className="quest-info">
                             {quest.map && quest.map.length > 0 && (
