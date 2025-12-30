@@ -531,6 +531,13 @@
             'Apollo': 'images/trader/apollo.png'
         };
 
+        // Helper function for wiki links
+        function formatWikiLink(name) {
+            return name.split(' ').map(function(word) {
+                return word.charAt(0).toUpperCase() + word.slice(1);
+            }).join('_');
+        }
+
         // Custom Map Node Component
         function MapNode({ data }) {
             const { quest, isCompleted, onToggle } = data;
@@ -604,7 +611,7 @@
                         </div>
                         <div className="quest-actions">
                             <a 
-                                href={`https://arcraiders.wiki/wiki/${quest.name.replace(/ /g, '_')}`}
+                                href={'https://arcraiders.wiki/wiki/' + formatWikiLink(quest.name)}
                                 target="_blank"
                                 className="quest-action-btn"
                                 onClick={(e) => e.stopPropagation()}
