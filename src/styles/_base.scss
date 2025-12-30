@@ -1,0 +1,56 @@
+@use 'variables' as *;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: $bg-primary;
+  color: $text-primary;
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.react-flow {
+  background: $bg-primary;
+}
+
+/* Header */
+.app-header {
+  flex-shrink: 0;
+  background: $bg-secondary;
+  padding: $spacing-md $spacing-xl;
+  border-bottom: $border-width-default solid $border-default;
+  box-shadow: $shadow-header;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img {
+    height: 40px;
+    width: auto;
+  }
+}
+
+/* Main content area */
+.main-content {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+/* Graph container */
+.graph-container {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}

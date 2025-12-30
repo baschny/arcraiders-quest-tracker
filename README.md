@@ -1,6 +1,7 @@
 # ARC Raiders Quest Tracker
 
 An interactive web application to track your quest progress in ARC Raiders.
+Based on data from https://github.com/RaidTheory/arcraiders-data (https://arctracker.io/).
 
 ## Features
 
@@ -13,12 +14,55 @@ An interactive web application to track your quest progress in ARC Raiders.
   - When unmarking a quest, dependent quests are also unmarked (with confirmation if multiple)
 - **Trader Color Coding**: Each trader has a distinct color for easy identification
 - **Statistics**: Track completed, available, and total quests
+- **Search**: Search for quests in the sidebar to quickly jump to them
+
+## Development
+
+### Installation
+
+```bash
+npm install
+```
+
+### Generate Quest Data
+
+Before running the application, generate the quest data:
+
+```bash
+npm run generate-data
+```
+
+This extracts quest data from `../arcraiders-data/quests/*.json` and creates `public/quest-data.json`.
+
+### Development Server
+
+Run the development server with hot module replacement:
+
+```bash
+npm run dev
+```
+
+Open http://localhost:5173 in your browser.
+
+### Production Build
+
+Build the application for production:
+
+```bash
+npm run build
+```
+
+The build output will be in the `dist/` directory, ready to deploy to any static web server.
+
+### Preview Production Build
+
+Preview the production build locally:
+
+```bash
+npm run preview
+```
 
 ## Usage
-
-### Opening the Tracker
-
-Simply open `index.html` in your web browser. No server or installation required!
 
 ### Tracking Quests
 
@@ -55,21 +99,12 @@ The quest data is embedded directly in the HTML file and includes:
 
 ## Technical Details
 
-- **Single-file application**: No external dependencies
+- **Stack**: Vite + React + TypeScript + SCSS
+- **Graph Layout**: Dagre for automatic hierarchical layout
+- **Visualization**: ReactFlow for interactive node-based UI
 - **localStorage**: Progress is saved in your browser
 - **Responsive design**: Works on desktop and mobile browsers
-- **No network required**: Works completely offline
-
-## Updating Quest Data
-
-For maintainers: To regenerate quest data from the source JSON files:
-
-```bash
-cd quest-tracker
-./generate-quest-data.sh
-```
-
-This extracts quest data from `../quests/*.json` and generates `quests-data.json` with blueprint detection. See `AGENTS.md` for complete update instructions.
+- **Static deployment**: No backend required, can be hosted on any static web server
 
 ## Notes
 

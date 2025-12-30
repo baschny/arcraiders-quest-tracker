@@ -4,46 +4,91 @@ This document explains how to maintain and update the ARC Raiders Quest Tracker 
 
 ## Overview
 
-The quest tracker is a single-file HTML application (`index.html`) that visualizes quest dependencies using React Flow with Dagre layout. Quest data is embedded directly in the JavaScript code.
+The quest tracker is a modern web application built with Vite, React, TypeScript, and SCSS. It visualizes quest dependencies using React Flow with Dagre layout. Quest data is loaded dynamically from a JSON file.
+
+## Project Structure
+
+```
+quest-tracker/
+├── src/
+│   ├── components/         # React components
+│   │   ├── QuestTracker.tsx  # Main application logic
+│   │   ├── QuestNode.tsx     # Quest node component
+│   │   ├── MapNode.tsx       # Map prerequisite node
+│   │   ├── Header.tsx        # Header with logo
+│   │   └── Sidebar.tsx       # Stats and search sidebar
+│   ├── styles/             # SCSS modules
+│   │   ├── main.scss         # Main stylesheet (imports all)
+│   │   ├── _variables.scss   # SCSS variables
+│   │   ├── _base.scss        # Global styles
+│   │   ├── _quest-node.scss  # Quest node styles
+│   │   ├── _map-node.scss    # Map node styles
+│   │   ├── _sidebar.scss     # Sidebar styles
+│   │   └── _react-flow.scss  # ReactFlow overrides
+│   ├── utils/              # Utility functions
+│   │   ├── helpers.ts        # General helpers
+│   │   └── questHelpers.ts   # Quest logic helpers
+│   ├── data/               # Static data
+│   │   └── static-data.ts    # MAP_NODES, TRADER_IMAGES, etc.
+│   ├── types/              # TypeScript types
+│   │   └── quest.ts          # Quest interfaces
+│   ├── App.tsx             # Root component with data loading
+│   ├── main.tsx            # Application entry point
+│   └── vite-env.d.ts       # Vite environment types
+├── public/                 # Static assets
+│   ├── images/             # Images (logo, maps, traders)
+│   └── quest-data.json     # Generated quest data
+├── dist/                   # Build output (gitignored)
+├── index.html              # HTML template
+├── vite.config.ts          # Vite configuration
+├── tsconfig.json           # TypeScript configuration
+├── package.json            # NPM dependencies and scripts
+└── generate-quest-data.sh  # Quest data generation script
+```
 
 ## Quest Data Structure
 
-Quest data comes from the parent directory's `quests/*.json` files. Each quest has:
+Quest data comes from `../arcraiders-data/quests/*.json` files. Each quest has:
 - `id`: Unique quest identifier
 - `name`: Quest name (English)
 - `trader`: NPC who gives the quest
+- `map`: Array of map identifiers
 - `previousQuestIds`: Array of prerequisite quest IDs
 - `nextQuestIds`: Array of subsequent quest IDs
+- `hasBlueprint`: Boolean indicating if quest rewards a blueprint
 
-## Updating Quest Data
+## Development Workflow
 
-### Automated Process (Recommended)
-
-Run the generation script from the quest-tracker directory:
+### Installation
 
 ```bash
-cd /Users/ernst/Develop/Games/ArcRaiders/arcraiders-data/quest-tracker
+npm install
+```
+
+### Generate Quest Data
+
+Run the generation script:
+
+```bash
+npm run generate-data
+# or directly:
 ./generate-quest-data.sh
 ```
 
 This script:
-1. Extracts quest data from `../quests/*.json` files
+1. Extracts quest data from `../arcraiders-data/quests/*.json` files
 2. Detects blueprint rewards (items ending with `_blueprint`)
-3. Compacts the JSON data
-4. **Automatically injects** the data into `index.html` by replacing the `const QUEST_DATA = [...]` line
+3. Adds map prerequisite references to starting quests
+4. Outputs to `public/quest-data.json`
 5. Reports statistics: total quests, blueprint count, and blueprint quest IDs
 
-The script uses `sed` to directly update the HTML file, so no manual copying is required. This keeps the application as a single self-contained HTML file without needing external JSON files or a web server for local testing.
-
-### Verification
-
-Start the local web server and verify:
+### Development Server
 
 ```bash
-./serve.sh
+npm run dev
 ```
 
-Then open http://localhost:8080 and verify:
+Open http://localhost:5173 and verify:
 1. All 72 quests are displayed with correct dependencies
 2. Map prerequisite nodes appear with distinct styling (dark blue gradient, map images)
 3. Blueprint badges (BP icon) appear on the 4 blueprint quests
@@ -185,29 +230,33 @@ Modify Dagre layout settings in `getLayoutedElements()`:
 2. Add trader icon/initial to trader icon rendering logic
 3. Update trader name tooltips
 
-## Files
+## Key Files
 
-- `index.html`: Main application (React Flow with embedded quest data)
+- `src/components/QuestTracker.tsx`: Main application logic with React Flow setup
+- `src/components/QuestNode.tsx`: Quest node rendering component
+- `src/components/MapNode.tsx`: Map prerequisite node component
+- `src/data/static-data.ts`: MAP_NODES, TRADER_IMAGES, BLUEPRINT_QUESTS constants
+- `src/styles/_variables.scss`: SCSS variables for theming
+- `src/types/quest.ts`: TypeScript type definitions
 - `generate-quest-data.sh`: Script to regenerate quest data from JSON files
-- `quests-data.json`: Generated quest data (with `hasBlueprint` flags)
-- `images/`: Map preview images (Dam_Battlegrounds.png.webp, Blue_Gate.png.webp, Stella_Montis.png.webp)
-- `README.md`: User documentation
-- `SPEC.md`: Functional specification
-- `AGENTS.md`: This file (maintenance guide for AI agents)
-- `index.html.cytoscape.backup`: Backup of old Cytoscape.js implementation
+- `public/quest-data.json`: Generated quest data (loaded at runtime)
+- `public/images/`: Map and trader images
+- `index.html.reactflow.backup`: Backup of old single-file implementation
 
 ## Data Flow
 
 ```
-../quests/*.json (source files)
+../arcraiders-data/quests/*.json (source files)
        ↓
 ./generate-quest-data.sh (extraction script)
        ↓
-./quests-data.json (generated data with hasBlueprint flags)
+public/quest-data.json (generated data with hasBlueprint flags)
        ↓
-[Manual copy/paste]
+[Loaded by App.tsx via fetch]
        ↓
-./index.html (QUESTS array and BLUEPRINT_QUESTS Set)
+Combined with MAP_NODES from static-data.ts
+       ↓
+Passed to QuestTracker component
 ```
 
 ## Notes

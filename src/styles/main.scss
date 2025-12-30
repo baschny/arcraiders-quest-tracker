@@ -1,0 +1,10 @@
+// Import our custom styles using @use (must be before CSS @import)
+@use 'variables';
+@use 'base';
+@use 'quest-node';
+@use 'map-node';
+@use 'sidebar';
+@use 'react-flow';
+
+// Import React Flow styles
+@import 'reactflow/dist/style.css';
