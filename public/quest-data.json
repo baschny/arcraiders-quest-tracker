@@ -121,7 +121,12 @@
     "id": "ss10",
     "name": "A Better Use",
     "trader": "Tian Wen",
-    "map": [],
+    "map": [
+      "buried_city",
+      "the_spaceport",
+      "the_blue_gate",
+      "dam_battlegrounds"
+    ],
     "previousQuestIds": [
       "ss7"
     ],
@@ -152,7 +157,11 @@
     "id": "ss10b",
     "name": "Dormant Barons",
     "trader": "Shani",
-    "map": [],
+    "map": [
+      "the_spaceport",
+      "dam_battlegrounds",
+      "the_blue_gate"
+    ],
     "previousQuestIds": [
       "ss10a"
     ],
@@ -179,7 +188,12 @@
     "id": "ss10d",
     "name": "Mixed Signals",
     "trader": "Tian Wen",
-    "map": [],
+    "map": [
+      "buried_city",
+      "the_spaceport",
+      "the_blue_gate",
+      "dam_battlegrounds"
+    ],
     "previousQuestIds": [
       "ss10b"
     ],
@@ -191,9 +205,9 @@
     "name": "What We Left Behind",
     "trader": "Tian Wen",
     "map": [
-      "dam_battlegrounds",
+      "buried_city",
       "the_spaceport",
-      "buried_city"
+      "dam_battlegrounds"
     ],
     "previousQuestIds": [
       "ss10b"
@@ -239,7 +253,9 @@
     "id": "ss10h",
     "name": "Broken Monument",
     "trader": "Tian Wen",
-    "map": [],
+    "map": [
+      "dam_battlegrounds"
+    ],
     "previousQuestIds": [
       "ss10e"
     ],
@@ -298,7 +314,9 @@
     "id": "ss10l",
     "name": "Market Correction",
     "trader": "Tian Wen",
-    "map": [],
+    "map": [
+      "buried_city"
+    ],
     "previousQuestIds": [
       "ss10i"
     ],
@@ -326,7 +344,9 @@
     "id": "ss10n",
     "name": "Industrial Espionage",
     "trader": "Tian Wen",
-    "map": [],
+    "map": [
+      "buried_city"
+    ],
     "previousQuestIds": [
       "ss10m"
     ],
@@ -339,7 +359,9 @@
     "id": "ss10o",
     "name": "Keeping the Memory",
     "trader": "Celeste",
-    "map": [],
+    "map": [
+      "dam_battlegrounds"
+    ],
     "previousQuestIds": [
       "ss10j"
     ],
@@ -352,7 +374,9 @@
     "id": "ss10p",
     "name": "Echoes of Victory Ridge",
     "trader": "Celeste",
-    "map": [],
+    "map": [
+      "dam_battlegrounds"
+    ],
     "previousQuestIds": [
       "ss10o"
     ],
@@ -399,9 +423,9 @@
     "name": "Eyes in the Sky",
     "trader": "Shani",
     "map": [
-      "dam_battlegrounds",
+      "buried_city",
       "the_spaceport",
-      "buried_city"
+      "dam_battlegrounds"
     ],
     "previousQuestIds": [
       "ss10k"
@@ -417,7 +441,9 @@
     "id": "ss10t",
     "name": "Celeste's Journals",
     "trader": "Celeste",
-    "map": [],
+    "map": [
+      "dam_battlegrounds"
+    ],
     "previousQuestIds": [
       "ss10r"
     ],
@@ -430,7 +456,9 @@
     "id": "ss10u",
     "name": "The Major's Footlocker",
     "trader": "Tian Wen",
-    "map": [],
+    "map": [
+      "dam_battlegrounds"
+    ],
     "previousQuestIds": [
       "ss10r"
     ],
@@ -441,7 +469,12 @@
     "id": "ss10v",
     "name": "Out of the Shadows",
     "trader": "Shani",
-    "map": [],
+    "map": [
+      "buried_city",
+      "the_spaceport",
+      "the_blue_gate",
+      "dam_battlegrounds"
+    ],
     "previousQuestIds": [
       "ss10r"
     ],
@@ -472,7 +505,9 @@
     "id": "ss10x",
     "name": "A Balanced Harvest",
     "trader": "Celeste",
-    "map": [],
+    "map": [
+      "dam_battlegrounds"
+    ],
     "previousQuestIds": [
       "ss10s"
     ],
@@ -500,7 +535,9 @@
     "id": "ss10x11",
     "name": "Flickering Threat",
     "trader": "Celeste",
-    "map": [],
+    "map": [
+      "dam_battlegrounds"
+    ],
     "previousQuestIds": [
       "ss10x10"
     ],
@@ -543,7 +580,9 @@
     "id": "ss10x14",
     "name": "Life of a Pharmacist",
     "trader": "Lance",
-    "map": [],
+    "map": [
+      "buried_city"
+    ],
     "previousQuestIds": [
       "ss10x13"
     ],
@@ -586,7 +625,9 @@
     "id": "ss10x17",
     "name": "Turnabout",
     "trader": "Celeste",
-    "map": [],
+    "map": [
+      "the_spaceport"
+    ],
     "previousQuestIds": [
       "ss10x16"
     ],
@@ -625,7 +666,9 @@
     "id": "ss10x2",
     "name": "Untended Garden",
     "trader": "Celeste",
-    "map": [],
+    "map": [
+      "dam_battlegrounds"
+    ],
     "previousQuestIds": [
       "ss10x"
     ],
@@ -652,7 +695,9 @@
     "id": "ss10x3",
     "name": "The Root of the Matter",
     "trader": "Celeste",
-    "map": [],
+    "map": [
+      "buried_city"
+    ],
     "previousQuestIds": [
       "ss10x2"
     ],
@@ -665,7 +710,9 @@
     "id": "ss10x4",
     "name": "Water Troubles",
     "trader": "Celeste",
-    "map": [],
+    "map": [
+      "dam_battlegrounds"
+    ],
     "previousQuestIds": [
       "ss10x3",
       "ss10y"
@@ -694,7 +741,9 @@
     "id": "ss10x6",
     "name": "Source of the Contamination",
     "trader": "Celeste",
-    "map": [],
+    "map": [
+      "dam_battlegrounds"
+    ],
     "previousQuestIds": [
       "ss10x4"
     ],
@@ -767,7 +816,9 @@
     "id": "ss10z",
     "name": "Our Presence Up There",
     "trader": "Shani",
-    "map": [],
+    "map": [
+      "dam_battlegrounds"
+    ],
     "previousQuestIds": [
       "ss10w"
     ],
@@ -795,7 +846,9 @@
     "id": "ss11a",
     "name": "Reduced to Rubble",
     "trader": "Shani",
-    "map": [],
+    "map": [
+      "the_blue_gate"
+    ],
     "previousQuestIds": [
       "ss11"
     ],
@@ -838,7 +891,9 @@
     "id": "ss11bx",
     "name": "With a Trace",
     "trader": "Shani",
-    "map": [],
+    "map": [
+      "the_blue_gate"
+    ],
     "previousQuestIds": [
       "ss11a"
     ],
@@ -875,7 +930,11 @@
     "id": "ss4",
     "name": "Off The Radar",
     "trader": "Shani",
-    "map": [],
+    "map": [
+      "buried_city",
+      "the_spaceport",
+      "dam_battlegrounds"
+    ],
     "previousQuestIds": [
       "ss2",
       "ss3"
@@ -918,7 +977,11 @@
     "id": "ss6",
     "name": "Down To Earth",
     "trader": "Shani",
-    "map": [],
+    "map": [
+      "buried_city",
+      "the_spaceport",
+      "dam_battlegrounds"
+    ],
     "previousQuestIds": [
       "ss5a"
     ],
@@ -981,7 +1044,12 @@
     "id": "ss9",
     "name": "The Trifecta",
     "trader": "Shani",
-    "map": [],
+    "map": [
+      "buried_city",
+      "the_spaceport",
+      "the_blue_gate",
+      "dam_battlegrounds"
+    ],
     "previousQuestIds": [
       "ss6"
     ],
