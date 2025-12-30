@@ -5,7 +5,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-QUESTS_DIR="$SCRIPT_DIR/../quests"
+QUESTS_DIR="$SCRIPT_DIR/../arcraiders-data/quests"
 TEMP_FILE="$SCRIPT_DIR/.quests-data.tmp.json"
 HTML_FILE="$SCRIPT_DIR/index.html"
 
