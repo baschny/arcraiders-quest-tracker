@@ -4,7 +4,7 @@ import { Quest } from '../types/quest';
 export const MAP_NODES: Quest[] = [
   {
     id: 'map_dam_battleground',
-    name: '🗺️ Dam Battleground',
+    name: 'Dam Battleground',
     trader: 'Map',
     map: ['dam_battlegrounds'],
     previousQuestIds: [],
@@ -13,7 +13,7 @@ export const MAP_NODES: Quest[] = [
   },
   {
     id: 'map_blue_gate',
-    name: '🗺️ Blue Gate',
+    name: 'Blue Gate',
     trader: 'Map',
     map: ['the_blue_gate'],
     previousQuestIds: [],
@@ -22,7 +22,7 @@ export const MAP_NODES: Quest[] = [
   },
   {
     id: 'map_stella_montis',
-    name: '🗺️ Stella Montis',
+    name: 'Stella Montis',
     trader: 'Map',
     map: ['stella_montis_upper'],
     previousQuestIds: [],

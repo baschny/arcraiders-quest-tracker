@@ -1,7 +1,12 @@
 import { Quest } from '../types/quest';
 
+interface MapNodeWithStatus extends Quest {
+  isCompleted: boolean;
+}
+
 interface SidebarProps {
   actualQuests: Quest[];
+  mapNodes: MapNodeWithStatus[];
   availableQuests: Quest[];
   completedCount: number;
   searchQuery: string;
@@ -9,10 +14,12 @@ interface SidebarProps {
   onSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSearchKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   onQuestClick: (questId: string) => void;
+  onMapToggle: (mapId: string) => void;
 }
 
 export function Sidebar({
   actualQuests,
+  mapNodes,
   availableQuests,
   completedCount,
   searchQuery,
@@ -20,6 +27,7 @@ export function Sidebar({
   onSearchChange,
   onSearchKeyDown,
   onQuestClick,
+  onMapToggle,
 }: SidebarProps) {
   return (
     <div className="available-sidebar">
@@ -38,6 +46,24 @@ export function Sidebar({
           <span className="sidebar-stat-icon">⭐</span>
           <span className="sidebar-stat-value">{availableQuests.length}</span>
         </div>
+      </div>
+
+      <div className="available-sidebar-header">
+        🗺️ Unlocked Maps ({mapNodes.filter((m) => m.isCompleted).length}/{mapNodes.length})
+      </div>
+
+      <div className="available-quests-list">
+        {mapNodes.map((mapNode) => (
+          <div
+            key={mapNode.id}
+            className={`available-quest-item ${mapNode.isCompleted ? 'completed' : ''}`}
+            onClick={() => mapNode.isCompleted ? onQuestClick(mapNode.id) : onMapToggle(mapNode.id)}
+            title={mapNode.isCompleted ? 'Click to view in quest tree' : 'Click to unlock this map'}
+          >
+            <div className="available-quest-name">{mapNode.name}</div>
+            {mapNode.isCompleted && <span className="map-check">✓</span>}
+          </div>
+        ))}
       </div>
 
       <div className="available-sidebar-header">

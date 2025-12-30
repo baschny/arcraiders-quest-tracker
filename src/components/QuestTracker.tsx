@@ -274,6 +274,9 @@ export function QuestTracker({ quests }: QuestTrackerProps) {
 
   // Filter out map nodes for statistics
   const actualQuests = quests.filter((q) => q.trader !== 'Map');
+  const mapNodes = quests
+    .filter((q) => q.trader === 'Map')
+    .map((q) => ({ ...q, isCompleted: completedQuests.has(q.id) }));
   const availableQuests = actualQuests.filter((q) => isAvailable(q));
   const completedCount = actualQuests.filter((q) =>
     completedQuests.has(q.id)
@@ -371,6 +374,7 @@ export function QuestTracker({ quests }: QuestTrackerProps) {
       <div className="main-content">
         <Sidebar
           actualQuests={actualQuests}
+          mapNodes={mapNodes}
           availableQuests={availableQuests}
           completedCount={completedCount}
           searchQuery={searchQuery}
@@ -378,6 +382,7 @@ export function QuestTracker({ quests }: QuestTrackerProps) {
           onSearchChange={handleSearchChange}
           onSearchKeyDown={handleSearchKeyDown}
           onQuestClick={focusOnQuest}
+          onMapToggle={toggleQuest}
         />
 
         <div className="graph-container">

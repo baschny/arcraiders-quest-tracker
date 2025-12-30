@@ -93,11 +93,23 @@
   border-radius: $radius-sm;
   cursor: pointer;
   transition: $transition-default;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 
   &:hover {
     background: $bg-quaternary;
     border-color: $status-available;
     transform: translateX(2px);
+  }
+
+  &.completed {
+    border-left-color: $status-completed;
+    background: rgba(76, 175, 80, 0.1);
+
+    .available-quest-name {
+      color: $text-secondary;
+    }
   }
 }
 
@@ -113,4 +125,11 @@
   text-align: center;
   color: $text-secondary;
   font-style: italic;
+}
+
+.map-check {
+  color: $status-completed;
+  font-size: 18px;
+  font-weight: bold;
+  margin-left: auto;
 }
