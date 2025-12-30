@@ -15,6 +15,7 @@ import { QuestNode } from './QuestNode';
 import { MapNode } from './MapNode';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
+import { ConfirmDialog } from './ConfirmDialog';
 import { STORAGE_KEY } from '../data/static-data';
 import {
   isQuestAvailable,
@@ -47,6 +48,23 @@ export function QuestTracker({ quests }: QuestTrackerProps) {
   );
   const [reactFlowInstance, setReactFlowInstance] =
     useState<ReactFlowInstance | null>(null);
+
+  // Confirmation dialog state
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    questList: string[];
+    showMore: number;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    questList: [],
+    showMore: 0,
+    onConfirm: () => {},
+  });
 
   // Save to localStorage whenever completedQuests changes
   useEffect(() => {
@@ -89,24 +107,27 @@ export function QuestTracker({ quests }: QuestTrackerProps) {
           if (dependents.size > 0) {
             const dependentNames = Array.from(dependents)
               .map((id) => quests.find((q) => q.id === id)?.name)
-              .filter(Boolean);
+              .filter(Boolean) as string[];
 
-            const confirmed = window.confirm(
-              `Marking "${quest.name}" as incomplete will also mark ${dependents.size} dependent quest(s) as incomplete:\n\n` +
-                dependentNames.slice(0, 5).join('\n') +
-                (dependentNames.length > 5
-                  ? `\n...and ${dependentNames.length - 5} more`
-                  : '') +
-                `\n\nDo you want to continue?`
-            );
-
-            if (!confirmed) return prev;
-
-            // Remove quest and all dependents
-            const newSet = new Set(prev);
-            newSet.delete(questId);
-            dependents.forEach((id) => newSet.delete(id));
-            return newSet;
+            // Show confirmation dialog
+            setConfirmDialog({
+              isOpen: true,
+              title: 'Mark Quest as Incomplete?',
+              message: `Marking "${quest.name}" as incomplete will also mark ${dependents.size} dependent quest(s) as incomplete:`,
+              questList: dependentNames.slice(0, 5),
+              showMore: dependentNames.length > 5 ? dependentNames.length - 5 : 0,
+              onConfirm: () => {
+                // Remove quest and all dependents
+                setCompletedQuests((current) => {
+                  const newSet = new Set(current);
+                  newSet.delete(questId);
+                  dependents.forEach((id) => newSet.delete(id));
+                  return newSet;
+                });
+                setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
+              },
+            });
+            return prev;
           } else {
             // No dependents, just uncomplete
             const newSet = new Set(prev);
@@ -126,24 +147,27 @@ export function QuestTracker({ quests }: QuestTrackerProps) {
             );
             const prereqNames = incompleteAll
               .map((id) => quests.find((q) => q.id === id)?.name)
-              .filter(Boolean);
+              .filter(Boolean) as string[];
 
-            const confirmed = window.confirm(
-              `"${quest.name}" has ${incompleteAll.length} incomplete prerequisite(s):\n\n` +
-                prereqNames.slice(0, 5).join('\n') +
-                (prereqNames.length > 5
-                  ? `\n...and ${prereqNames.length - 5} more`
-                  : '') +
-                `\n\nDo you want to auto-complete all prerequisites?`
-            );
-
-            if (!confirmed) return prev;
-
-            // Add quest and all prerequisites
-            const newSet = new Set(prev);
-            incompleteAll.forEach((id) => newSet.add(id));
-            newSet.add(questId);
-            return newSet;
+            // Show confirmation dialog
+            setConfirmDialog({
+              isOpen: true,
+              title: 'Auto-complete Prerequisites?',
+              message: `"${quest.name}" has ${incompleteAll.length} incomplete prerequisite(s):`,
+              questList: prereqNames.slice(0, 5),
+              showMore: prereqNames.length > 5 ? prereqNames.length - 5 : 0,
+              onConfirm: () => {
+                // Add quest and all prerequisites
+                setCompletedQuests((current) => {
+                  const newSet = new Set(current);
+                  incompleteAll.forEach((id) => newSet.add(id));
+                  newSet.add(questId);
+                  return newSet;
+                });
+                setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
+              },
+            });
+            return prev;
           } else {
             // All prerequisites complete, just complete this quest
             const newSet = new Set(prev);
@@ -371,6 +395,15 @@ export function QuestTracker({ quests }: QuestTrackerProps) {
   return (
     <>
       <Header />
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        questList={confirmDialog.questList}
+        showMore={confirmDialog.showMore}
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={() => setConfirmDialog((prev) => ({ ...prev, isOpen: false }))}
+      />
       <div className="main-content">
         <Sidebar
           actualQuests={actualQuests}

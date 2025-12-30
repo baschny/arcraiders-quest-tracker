@@ -16,7 +16,8 @@ quest-tracker/
 │   │   ├── QuestNode.tsx     # Quest node component
 │   │   ├── MapNode.tsx       # Map prerequisite node
 │   │   ├── Header.tsx        # Header with logo
-│   │   └── Sidebar.tsx       # Stats and search sidebar
+│   │   ├── Sidebar.tsx       # Stats and search sidebar
+│   │   └── ConfirmDialog.tsx # Modern confirmation dialog
 │   ├── styles/             # SCSS modules
 │   │   ├── main.scss         # Main stylesheet (imports all)
 │   │   ├── _variables.scss   # SCSS variables
@@ -24,6 +25,7 @@ quest-tracker/
 │   │   ├── _quest-node.scss  # Quest node styles
 │   │   ├── _map-node.scss    # Map node styles
 │   │   ├── _sidebar.scss     # Sidebar styles
+│   │   ├── _confirm-dialog.scss # Confirmation dialog styles
 │   │   └── _react-flow.scss  # ReactFlow overrides
 │   ├── utils/              # Utility functions
 │   │   ├── helpers.ts        # General helpers
@@ -163,9 +165,17 @@ Defined in `getTraderColor()`:
   
 - **Progress Tracking**:
   - Saved to localStorage (`arcraiders-quest-progress-reactflow`)
-  - Smart completion: auto-complete prerequisites with confirmation dialog
-  - Smart uncomplete: auto-uncomplete dependents with confirmation dialog
+  - Smart completion: auto-complete prerequisites with modern confirmation dialog
+  - Smart uncomplete: auto-uncomplete dependents with modern confirmation dialog
   - Statistics display: X/72 quests completed
+  
+- **Confirmation Dialog**:
+  - Modern web-based modal dialog (replaces system alerts)
+  - Dark themed, matches application design
+  - Shows affected quest list (up to 5, with "...and X more" for additional)
+  - Keyboard support: Enter to confirm, Escape to cancel
+  - Click outside to cancel, animated entrance/exit
+  - Used for smart completion/uncomplete operations
   
 - **Blueprint Rewards**:
   - Blueprint badge (BP icon) displays on quests that reward blueprint items
@@ -230,13 +240,23 @@ Modify Dagre layout settings in `getLayoutedElements()`:
 2. Add trader icon/initial to trader icon rendering logic
 3. Update trader name tooltips
 
+### Adding New SCSS Styles
+
+When creating a new SCSS module file:
+1. Create the file in `src/styles/` with underscore prefix (e.g., `_new-component.scss`)
+2. Add `@use 'variables' as *;` at the top to access SCSS variables
+3. Import the module in `src/styles/main.scss` using `@use 'new-component';`
+4. All SCSS variables from `_variables.scss` will be available without prefix
+
 ## Key Files
 
 - `src/components/QuestTracker.tsx`: Main application logic with React Flow setup
 - `src/components/QuestNode.tsx`: Quest node rendering component
 - `src/components/MapNode.tsx`: Map prerequisite node component
+- `src/components/ConfirmDialog.tsx`: Modern confirmation dialog component
 - `src/data/static-data.ts`: MAP_NODES, TRADER_IMAGES, BLUEPRINT_QUESTS constants
 - `src/styles/_variables.scss`: SCSS variables for theming
+- `src/styles/_confirm-dialog.scss`: Confirmation dialog styles
 - `src/types/quest.ts`: TypeScript type definitions
 - `generate-quest-data.sh`: Script to regenerate quest data from JSON files
 - `public/quest-data.json`: Generated quest data (loaded at runtime)
@@ -262,8 +282,9 @@ Passed to QuestTracker component
 ## Notes
 
 - Map nodes are custom prerequisites (not from arctraiders-data JSON files)
-- Map nodes must be added manually to `MAP_NODES` array in `index.html`
+- Map nodes must be added manually to `MAP_NODES` array in `static-data.ts`
 - Always verify quest dependencies are bidirectional (if A→B, then B should list A in previousQuestIds)
-- The application is completely client-side with no external dependencies at runtime (uses CDN for React/React Flow)
+- The application is a modern React SPA built with Vite, TypeScript, and SCSS modules
 - Blueprint detection: Any quest with a reward item ending in `_blueprint` is flagged
 - Quest IDs exclude map nodes (72 actual quests, 3 map nodes = 75 total nodes)
+- Confirmation dialogs use a modern web-based modal instead of system alerts for better UX
