@@ -75,13 +75,22 @@ body {
   padding: $spacing-md $spacing-xl;
   border-top: $border-width-default solid $border-default;
   box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.3);
-  text-align: center;
+}
 
-  p {
-    margin: 0;
-    font-size: $font-md;
-    color: $text-secondary;
-  }
+.footer-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: $spacing-xl;
+  flex-wrap: wrap;
+}
+
+.footer-text {
+  margin: 0;
+  font-size: $font-md;
+  color: $text-secondary;
+  flex: 1;
+  min-width: 300px;
 
   a {
     color: $text-accent;
@@ -92,6 +101,38 @@ body {
       color: color.adjust($text-accent, $lightness: 10%);
       text-decoration: underline;
     }
+  }
+}
+
+.footer-discord {
+  display: flex;
+  gap: $spacing-md;
+  align-items: center;
+}
+
+.discord-link {
+  display: flex;
+  align-items: center;
+  gap: $gap-xs;
+  padding: $spacing-xs $spacing-md;
+  background: $bg-tertiary;
+  border: $border-width-thin solid $border-light;
+  border-radius: $radius-sm;
+  color: #5865f2;
+  text-decoration: none;
+  font-size: $font-sm;
+  transition: $transition-default;
+  white-space: nowrap;
+
+  svg {
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    background: $bg-quaternary;
+    border-color: #5865f2;
+    color: color.adjust(#5865f2, $lightness: 10%);
+    text-decoration: none;
   }
 }
 
