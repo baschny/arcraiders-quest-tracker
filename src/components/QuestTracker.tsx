@@ -14,6 +14,7 @@ import { Quest } from '../types/quest';
 import { QuestNode } from './QuestNode';
 import { MapNode } from './MapNode';
 import { Header } from './Header';
+import { Footer } from './Footer';
 import { Sidebar } from './Sidebar';
 import { ConfirmDialog } from './ConfirmDialog';
 import { STORAGE_KEY } from '../data/static-data';
@@ -444,6 +445,7 @@ export function QuestTracker({ quests }: QuestTrackerProps) {
           </ReactFlow>
         </div>
       </div>
+      <Footer />
     </>
   );
 }

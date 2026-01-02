@@ -1,4 +1,5 @@
 @use 'variables' as *;
+@use 'sass:color';
 
 * {
   margin: 0;
@@ -35,9 +36,62 @@ body {
   align-items: center;
   justify-content: center;
 
-  img {
-    height: 40px;
-    width: auto;
+  h1 {
+    font-family: 'Urbanist', sans-serif;
+    font-size: 30px;
+    font-weight: 700;
+    color: $text-primary;
+    margin: 0;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .brand-name {
+    font-weight: 700;
+    color: $text-primary;
+  }
+
+  .app-name {
+    font-weight: 400;
+    color: $text-secondary;
+    position: relative;
+    padding-left: 12px;
+
+    &::before {
+      content: '•';
+      position: absolute;
+      left: 0;
+      color: $text-secondary;
+    }
+  }
+}
+
+/* Footer */
+.app-footer {
+  flex-shrink: 0;
+  background: $bg-secondary;
+  padding: $spacing-md $spacing-xl;
+  border-top: $border-width-default solid $border-default;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.3);
+  text-align: center;
+
+  p {
+    margin: 0;
+    font-size: $font-md;
+    color: $text-secondary;
+  }
+
+  a {
+    color: $text-accent;
+    text-decoration: none;
+    transition: $transition-default;
+
+    &:hover {
+      color: color.adjust($text-accent, $lightness: 10%);
+      text-decoration: underline;
+    }
   }
 }
 

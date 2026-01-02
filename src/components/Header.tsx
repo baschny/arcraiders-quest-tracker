@@ -1,7 +1,10 @@
 export function Header() {
   return (
     <div className="app-header">
-      <img src="/images/arc-raiders.svg" alt="ARC Raiders Quest Tracker" />
+      <h1>
+        <span className="brand-name">ARC Raiders</span>
+        <span className="app-name">Quest Tracker</span>
+      </h1>
     </div>
   );
 }
