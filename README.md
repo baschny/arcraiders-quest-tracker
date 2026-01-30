@@ -110,3 +110,4 @@ The quest data is embedded directly in the HTML file and includes:
 
 - Progress is stored per browser, so using a different browser or clearing browser data will reset your progress
 - The application automatically handles quest chains - completing prerequisites unlocks subsequent quests
+
